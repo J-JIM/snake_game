@@ -1,0 +1,100 @@
+// Map.cpp
+// 맵 데이터를 보관하고, 파일에서 읽고, 화면에 그리는 클래스 구현
+
+#include "Map.h"
+#include <fstream>
+#include <ncurses.h>
+#include <string>
+
+// 생성자: 맵 전체를 빈칸(0)으로 초기화
+Map::Map() {
+  height = 0;
+  width = 0;
+  for (int y = 0; y < MAP_MAX_SIZE; y++) {
+    for (int x = 0; x < MAP_MAX_SIZE; x++) {
+      data[y][x] = EMPTY;
+    }
+  }
+}
+
+// 텍스트 파일에서 맵 읽기
+// 파일 형식: 첫 줄에 "행 열", 그 다음부터 한 줄에 한 행씩 숫자 나열
+bool Map::loadFromFile(const char *filename) {
+  std::ifstream fin(filename);
+  if (fin.is_open() == false) {
+    return false;
+  }
+
+  // 첫 줄: 맵 크기
+  fin >> height >> width;
+
+  // 크기 검사 (명세서 요구: 최소 21x21)
+  if (height < MAP_MIN_SIZE || width < MAP_MIN_SIZE)
+    return false;
+  if (height > MAP_MAX_SIZE || width > MAP_MAX_SIZE)
+    return false;
+
+  // 한 줄씩 읽어서 각 글자를 정수로 바꿔서 저장
+  for (int y = 0; y < height; y++) {
+    std::string line;
+    fin >> line;
+    for (int x = 0; x < width; x++) {
+      // '0' ~ '7' 문자를 0 ~ 7 정수로 변환
+      data[y][x] = line[x] - '0';
+    }
+  }
+  return true;
+}
+
+// 한 칸 값 읽기. 범위를 벗어나면 WALL 로 처리해서 충돌 검사가 안전하게 됨
+int Map::getCell(int y, int x) const {
+  if (y < 0 || y >= height)
+    return WALL;
+  if (x < 0 || x >= width)
+    return WALL;
+  return data[y][x];
+}
+
+// 한 칸 값 바꾸기
+void Map::setCell(int y, int x, int value) {
+  if (y < 0 || y >= height)
+    return;
+  if (x < 0 || x >= width)
+    return;
+  data[y][x] = value;
+}
+
+// ncurses 색 페어 초기화. 게임 시작할 때 한 번만 부르면 됨.
+void Map::initColors() const {
+  init_pair(WALL, COLOR_WHITE, COLOR_WHITE);
+  // Immune Wall: 터미널 검정 배경에서는 BLACK이 보이지 않으므로
+  // 일단 Wall과 동일한 회색으로 표시 (데이터상 1/2 구분은 유지됨)
+  init_pair(IMMUNE_WALL, COLOR_WHITE, COLOR_WHITE);
+  init_pair(SNAKE_HEAD, COLOR_YELLOW, COLOR_YELLOW);
+  init_pair(SNAKE_BODY, COLOR_RED, COLOR_RED);
+  init_pair(GROWTH_ITEM, COLOR_GREEN, COLOR_GREEN);
+  init_pair(POISON_ITEM, COLOR_RED, COLOR_RED);
+  init_pair(GATE, COLOR_MAGENTA, COLOR_MAGENTA);
+}
+
+// 맵 전체를 화면에 그리기
+// (offsetY, offsetX) 부터 시작해서, 한 칸은 화면에서 두 글자 폭으로 표시
+void Map::draw(int offsetY, int offsetX) const {
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      int cell = data[y][x];
+      int screenY = offsetY + y;
+      int screenX = offsetX + x * CELL_WIDTH;
+
+      if (cell == EMPTY) {
+        // 빈칸은 그냥 공백 두 글자
+        mvprintw(screenY, screenX, "  ");
+      } else {
+        // 다른 셀은 해당 색을 적용해서 공백 두 글자 출력
+        attron(COLOR_PAIR(cell));
+        mvprintw(screenY, screenX, "  ");
+        attroff(COLOR_PAIR(cell));
+      }
+    }
+  }
+}
