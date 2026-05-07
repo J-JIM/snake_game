@@ -2,8 +2,8 @@
 // 맵 데이터를 보관하고, 파일에서 읽고, 화면에 그리는 클래스 구현
 
 #include "Map.h"
+#include "curses_compat.h"  // OS별 curses 호환 레이어
 #include <fstream>
-#include <ncurses.h>
 #include <string>
 
 // 생성자: 맵 전체를 빈칸(0)으로 초기화

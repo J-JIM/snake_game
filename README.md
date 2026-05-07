@@ -9,43 +9,43 @@ C++ + ncurses 로 구현하는 팀 프로젝트입니다.
 | 항목 | 값 |
 |------|-----|
 | 언어 | C++ (C++14 이상) |
-| 라이브러리 | ncurses |
+| 라이브러리 | ncurses (macOS/Linux) / PDCurses (Windows) |
 | 빌드 도구 | make + g++ |
-| OS | Ubuntu 권장 (WSL 가능) |
+| OS | macOS / Linux / Windows(MSYS2 MinGW) 모두 지원 |
 
-### ncurses 설치
+OS별 curses 헤더 차이는 `include/curses_compat.h` 가 흡수합니다.
+소스 코드는 `#include "curses_compat.h"` 한 줄만 쓰면 됨.
+
+### 빌드 & 실행 (macOS)
+
+```bash
+# ncurses 는 macOS 기본 제공이라 별도 설치 불필요
+make            # 빌드
+./snake         # 실행
+make clean
+```
+
+### 빌드 & 실행 (Linux / WSL)
 
 ```bash
 sudo apt-get update
 sudo apt-get install libncurses5-dev libncursesw5-dev
-```
-
-### 빌드 & 실행 (Linux 직접)
-
-```bash
-make            # 빌드
-./snake         # 실행
-make clean      # 오브젝트 파일 삭제
-```
-
-### 빌드 & 실행 (Docker — Mac/Windows 권장)
-
-Mac이나 Windows에서 개발할 때는 Docker가 가장 편함. 한 번 이미지 빌드하면 그 다음부턴 빠름.
-
-```bash
-# 1) 이미지 빌드 (최초 1회만, 약 2~3분 걸림)
-docker build -t snake-dev .
-
-# 2) 컨테이너 실행 (현재 폴더가 컨테이너의 /app 으로 마운트됨)
-docker run -it --rm -v "$(pwd):/app" snake-dev
-
-# 3) 컨테이너 안에서:
 make
 ./snake
 ```
 
-> 컨테이너에서 빠져나오려면 `exit`. `--rm` 옵션 덕분에 종료하면 컨테이너는 자동 삭제 (이미지는 남아있음).
-> 코드 수정은 호스트(Mac)에서 그대로 하면 됨. 컨테이너는 그냥 빌드/실행 환경일 뿐.
+### 빌드 & 실행 (Windows — MSYS2 MinGW64)
+
+[MSYS2](https://www.msys2.org/) 설치 후, **MSYS2 MinGW 64-bit** 셸에서:
+
+```bash
+pacman -S --needed mingw-w64-x86_64-toolchain mingw-w64-x86_64-pdcurses make
+make
+./snake.exe
+```
+
+> Makefile이 `$(OS)` 변수를 보고 자동으로 `-lpdcurses` 로 링크합니다.
+> Visual Studio(MSVC) 는 지원하지 않습니다. MinGW/MSYS2 사용 권장.
 
 ---
 
@@ -54,12 +54,11 @@ make
 ```
 Snake-Game/
 ├── README.md          # 이 문서
-├── Dockerfile         # 개발 환경 (Ubuntu + ncurses)
-├── Makefile           # 빌드 스크립트
+├── Makefile           # 빌드 스크립트 (OS 자동 감지)
 ├── .gitignore         # git 추적 제외 목록
 │
 ├── src/               # 소스 파일 (.cpp)
-│   ├── main.cpp              # 게임 루프 (ncurses init/end, tick)
+│   ├── main.cpp              # 게임 루프 (curses init/end, tick)
 │   ├── Map.cpp               # [1단계] 맵 구현
 │   ├── Snake.cpp             # [2단계] 뱀 구현
 │   ├── Item.cpp              # [3단계] (예정)
@@ -68,6 +67,7 @@ Snake-Game/
 │
 ├── include/           # 헤더 파일 (.h)
 │   ├── common.h              # 공용 enum, 상수
+│   ├── curses_compat.h       # OS별 curses + sleep 호환 레이어
 │   ├── Map.h
 │   ├── Snake.h
 │   ├── Item.h                # (예정)

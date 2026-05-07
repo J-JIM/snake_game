@@ -2,14 +2,14 @@
 // Snake Game - 1단계, 2단계 통합
 // 게임 화면을 띄우고, 화살표 키로 뱀을 움직인다.
 
-#include <ncurses.h>
-#include <unistd.h>   // usleep (tick 간격용)
-#include <locale.h>   // 한글 출력용 locale 설정
-#include "common.h"
+#include "curses_compat.h"  // OS별 curses + sleep 호환 레이어
+#include <locale.h>          // 한글 출력용 locale 설정
+#include "common.h"          //네임스페이스 사용.
 #include "Map.h"
 #include "Snake.h"
 
 // 1 tick 간격 (마이크로초 단위). 200000 = 0.2초
+// !) tick은 고정 tick으로 진행했습니다. 모든 단계 완료되면 추가 수정으로 진행하려고 합니다.
 const int TICK_USEC = 200000;
 
 int main() {
@@ -80,8 +80,8 @@ int main() {
             running = false;
         }
 
-        // (d) tick 만큼 쉬기
-        usleep(TICK_USEC);
+        // (d) tick 만큼 쉬기 (OS별 wrapper)
+        sleep_usec(TICK_USEC);
     }
 
     // ===== 5) ncurses 종료 =====
