@@ -26,7 +26,7 @@ else
 endif
 
 TARGET   = snake
-SRCS     = src/main.cpp src/Map.cpp src/Snake.cpp
+SRCS     = src/main.cpp src/Map.cpp src/Snake.cpp src/Item.cpp
 OBJS     = $(SRCS:.cpp=.o)
 
 all: $(TARGET)

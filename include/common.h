@@ -34,4 +34,11 @@ const int SNAKE_MAX_LENGTH = 100;
 // 한 칸 = 화면 두 글자 폭 (정사각형처럼 보이게)
 const int CELL_WIDTH = 2;
 
+// 좌표 한 쌍
+// 원래 Snake에 있었지만, item도 사용하기 위해 공용 헤더에 정의
+struct Position {
+    int y;
+    int x;
+};
+
 #endif

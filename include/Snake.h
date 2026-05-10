@@ -8,12 +8,6 @@
 
 class Map;  // 전방 선언
 
-// 좌표 한 쌍
-struct Position {
-    int y;
-    int x;
-};
-
 class Snake {
 public:
     Snake();

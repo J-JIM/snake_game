@@ -4,9 +4,11 @@
 
 #include "curses_compat.h"  // OS별 curses + sleep 호환 레이어
 #include <locale.h>          // 한글 출력용 locale 설정
+#include <ctime>             // srand 사용을 위한 ctime.
 #include "common.h"          //네임스페이스 사용.
 #include "Map.h"
 #include "Snake.h"
+#include "Item.h"
 
 // 1 tick 간격 (마이크로초 단위). 200000 = 0.2초
 // !) tick은 고정 tick으로 진행했습니다. 모든 단계 완료되면 추가 수정으로 진행하려고 합니다.
@@ -38,6 +40,16 @@ int main() {
 
     // ===== 3) 뱀 초기화 (맵에서 머리/몸통 위치 읽어오기) =====
     Snake snake;
+
+    // struct에 따라 growthItem, poisonItem 정의
+    Item growthItem = {0, 0, false, 0};
+    Item poisonItem = {0, 0, false, 0};
+    srand((unsigned int)time(NULL)); // 랜덤 시드
+
+    // rand()는 사실상 시드 값 기반의 "가짜 난수"
+    // srand(time(NULL))은 현재 시각을 시드로 사용함.
+    // 게임 실행 시 매번 다른 위치에 아이템을 생성시킬 수 있음.
+
     if (snake.initFromMap(map) == false) {
         endwin();
         printf("맵에 뱀(3, 4)이 없습니다.\n");
@@ -70,6 +82,11 @@ int main() {
 
         // (c) 뱀 한 칸 이동
         bool alive = snake.move(map);
+
+        //매 tick마다 아이템 상태 갱신.
+        updateItem(map, growthItem, GROWTH_ITEM);
+        updateItem(map, poisonItem, POISON_ITEM);
+
         if (alive == false) {
             // 벽 충돌 / 자기 몸통 충돌 / 반대 방향 입력 → 게임 오버
             mvprintw(map.getHeight() + 2, 0,

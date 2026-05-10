@@ -188,10 +188,23 @@ bool Snake::move(Map& map) {
         }
     }
 
-    // (4) 맵에서 옛 꼬리 자리 비우기
-    int oldTailY = body[length - 1].y;
-    int oldTailX = body[length - 1].x;
-    map.setCell(oldTailY, oldTailX, EMPTY);
+    // (4) 아이템 종류에 따라 꼬리 처리 분기 설정
+    if (target == GROWTH_ITEM) {
+        length++; // 만약 자라나는 아이템을 먹었다면, 꼬리 증가
+    } else {
+        int oldTailY = body[length - 1].y;
+        int oldTailX = body[length - 1].x;
+        map.setCell(oldTailY, oldTailX, EMPTY);
+
+        if (target == POISON_ITEM){
+            if (length - 1 < 3) {
+                return false; // RULE 2에 따라 몸의 길이가 3 이하면 실패
+            }
+            length--;
+            // 독을 먹어서 잘려나간 꼬리 좌표 제거
+            map.setCell(body[length - 1].y, body[length - 1].x, EMPTY);
+        }
+    }
 
     // (5) 몸통을 한 칸씩 뒤로 밀기 (뒤에서부터)
     for (int i = length - 1; i > 0; i--) {
