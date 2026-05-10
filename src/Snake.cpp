@@ -204,6 +204,7 @@ bool Snake::move(Map& map) {
             // 독을 먹어서 잘려나간 꼬리 좌표 제거
             map.setCell(body[length - 1].y, body[length - 1].x, EMPTY);
         }
+        // SPEED_ITEM은 길이 변화 없이 속도 변화만 줌(처리 불필요)
     }
 
     // (5) 몸통을 한 칸씩 뒤로 밀기 (뒤에서부터)

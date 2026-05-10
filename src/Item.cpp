@@ -42,3 +42,34 @@ void updateItem(Map& map, Item& item, int cellType) {
         spawnItem(map, item, cellType); // 새로운 곳에 아이템 재생성
     }
 }
+
+// move() 직전에 호출 — 속도 아이템이 맵에 있었는지 스냅샷 저장
+void prepareSpeedItem(Map& map, Item& item, int cellType) {
+    item.wasOnMap = item.active && map.getCell(item.y, item.x) == cellType;
+}
+
+// move() 직후에 호출
+// 먹힘 감지 후 effectTimer 세팅, 아이템 갱신 주기 관리
+// 반환값: 이번 틱에 다른 아이템 growth/poison도 갱신해야 하면 true
+bool updateSpeedItem(Map& map, Item& item, int cellType) {
+    item.tickCounter++;
+    bool shouldUpdate = (item.effectTimer <= 0) || (item.tickCounter % 2 == 0);
+
+    if (shouldUpdate) {
+        // updateItem 전에 먹힘 여부 확인 (이후엔 좌표가 바뀜)
+        if (item.wasOnMap && map.getCell(item.y, item.x) != cellType) {
+            item.effectTimer = 30;
+        }
+        updateItem(map, item, cellType);
+    }
+
+    if (item.effectTimer > 0) {
+        item.effectTimer--;
+    }
+
+    return shouldUpdate;
+}
+
+bool isSpeedActive(const Item& item) {
+    return item.effectTimer > 0;
+}

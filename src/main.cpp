@@ -41,9 +41,10 @@ int main() {
     // ===== 3) 뱀 초기화 (맵에서 머리/몸통 위치 읽어오기) =====
     Snake snake;
 
-    // struct에 따라 growthItem, poisonItem 정의
-    Item growthItem = {0, 0, false, 0};
-    Item poisonItem = {0, 0, false, 0};
+    // struct에 따라 growthItem, poisonItem, speedItem 정의
+    Item growthItem = {0, 0, false, 0, 0, 0, false};
+    Item poisonItem = {0, 0, false, 0, 0, 0, false};
+    Item speedItem  = {0, 0, false, 0, 0, 0, false};
     srand((unsigned int)time(NULL)); // 랜덤 시드
 
     // rand()는 사실상 시드 값 기반의 "가짜 난수"
@@ -81,11 +82,14 @@ int main() {
         }
 
         // (c) 뱀 한 칸 이동
+        prepareSpeedItem(map, speedItem, SPEED_ITEM);  // move() 전 스냅샷
         bool alive = snake.move(map);
 
-        //매 tick마다 아이템 상태 갱신.
-        updateItem(map, growthItem, GROWTH_ITEM);
-        updateItem(map, poisonItem, POISON_ITEM);
+        bool shouldUpdate = updateSpeedItem(map, speedItem, SPEED_ITEM);
+        if (shouldUpdate) {
+            updateItem(map, growthItem, GROWTH_ITEM);
+            updateItem(map, poisonItem, POISON_ITEM);
+        }
 
         if (alive == false) {
             // 벽 충돌 / 자기 몸통 충돌 / 반대 방향 입력 → 게임 오버
@@ -98,7 +102,7 @@ int main() {
         }
 
         // (d) tick 만큼 쉬기 (OS별 wrapper)
-        sleep_usec(TICK_USEC);
+        sleep_usec(isSpeedActive(speedItem) ? TICK_USEC / 2 : TICK_USEC);
     }
 
     // ===== 5) ncurses 종료 =====

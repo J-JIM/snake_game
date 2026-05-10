@@ -10,7 +10,8 @@ enum Cell {
     SNAKE_BODY   = 4,
     GROWTH_ITEM  = 5,
     POISON_ITEM  = 6,
-    GATE         = 7
+    GATE         = 7,
+    SPEED_ITEM   = 8 // 3단계 Item 종류 추가사항 도입.
 };
 
 // 이동 방향

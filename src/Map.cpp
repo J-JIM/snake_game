@@ -75,6 +75,7 @@ void Map::initColors() const {
   init_pair(GROWTH_ITEM, COLOR_GREEN, COLOR_GREEN);
   init_pair(POISON_ITEM, COLOR_RED, COLOR_RED);
   init_pair(GATE, COLOR_MAGENTA, COLOR_MAGENTA);
+  init_pair(SPEED_ITEM, COLOR_CYAN, COLOR_CYAN);
 }
 
 // 맵 전체를 화면에 그리기
