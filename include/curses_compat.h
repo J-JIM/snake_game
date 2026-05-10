@@ -7,7 +7,7 @@
 #define CURSES_COMPAT_H
 
 #ifdef _WIN32               //전처리기. Windows 환경에서 진행.
-    #include <curses.h>     // PDCurses
+    #include <pdcurses.h>   // curses.h -> pdcurses.h로 변경(윈도우 환경 실행오류 해결)
     #include <windows.h>
     // PDCurses 환경에서는 usleep이 없으므로 Sleep(밀리초)으로 매핑
     inline void sleep_usec(int usec) {
