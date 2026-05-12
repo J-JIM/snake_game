@@ -3,15 +3,16 @@
 
 // 맵 셀 값
 enum Cell {
-    EMPTY        = 0,
-    WALL         = 1,
-    IMMUNE_WALL  = 2,
-    SNAKE_HEAD   = 3,
-    SNAKE_BODY   = 4,
-    GROWTH_ITEM  = 5,
-    POISON_ITEM  = 6,
-    GATE         = 7,
-    SPEED_ITEM   = 8 // 3단계 Item 종류 추가사항 도입.
+    EMPTY           = 0,
+    WALL            = 1,
+    IMMUNE_WALL     = 2,
+    SNAKE_HEAD      = 3,
+    SNAKE_BODY      = 4,
+    GROWTH_ITEM     = 5,
+    POISON_ITEM     = 6,
+    GATE            = 7,
+    SPEED_ITEM      = 8,  // 3단계 Item 종류 추가사항 도입.
+    USED_GATE_WALL  = 9   // 4단계 (3) 워프 흔적 - 한 번 Gate가 떴던 자리, 다시는 Gate 안 생김
 };
 
 // 이동 방향

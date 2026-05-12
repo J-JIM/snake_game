@@ -76,6 +76,8 @@ void Map::initColors() const {
   init_pair(POISON_ITEM, COLOR_RED, COLOR_RED);
   init_pair(GATE, COLOR_MAGENTA, COLOR_MAGENTA);
   init_pair(SPEED_ITEM, COLOR_CYAN, COLOR_CYAN);
+  // Gate가 한 번 떴던 자리 - 시각적으로 회색 Wall과 구분되도록 노랑 사용
+  init_pair(USED_GATE_WALL, COLOR_YELLOW, COLOR_YELLOW);
 }
 
 // 맵 전체를 화면에 그리기

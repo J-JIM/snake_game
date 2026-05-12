@@ -5,10 +5,12 @@
 #include "curses_compat.h"  // OS별 curses + sleep 호환 레이어
 #include <locale.h>          // 한글 출력용 locale 설정
 #include <ctime>             // srand 사용을 위한 ctime.
+#include <cstdlib>           // srand/rand
 #include "common.h"          //네임스페이스 사용.
 #include "Map.h"
 #include "Snake.h"
 #include "Item.h"
+#include "Gate.h"            // 4단계 (Gate + (3) 워프 흔적 동작 포함)
 
 // 1 tick 간격 (마이크로초 단위). 200000 = 0.2초
 // !) tick은 고정 tick으로 진행했습니다. 모든 단계 완료되면 추가 수정으로 진행하려고 합니다.
@@ -26,12 +28,12 @@ int main() {
     curs_set(0);            // 커서 안 보이게
     nodelay(stdscr, TRUE);  // getch()가 키 없으면 기다리지 않게 (tick 진행용)
 
-    // ===== 2) 맵 불러오기 =====
+    // ===== 2) 맵 불러오기 (4단계는 stage4.txt — island wall 포함) =====
     Map map;
-    bool ok = map.loadFromFile("stages/stage1.txt");
+    bool ok = map.loadFromFile("stages/stage4.txt");
     if (ok == false) {
         endwin();
-        printf("stage1.txt 를 읽을 수 없습니다.\n");
+        printf("stage4.txt 를 읽을 수 없습니다.\n");
         return 1;
     }
 
@@ -45,6 +47,11 @@ int main() {
     Item growthItem = {0, 0, false, 0, 0, 0, false};
     Item poisonItem = {0, 0, false, 0, 0, 0, false};
     Item speedItem  = {0, 0, false, 0, 0, 0, false};
+
+    // 4단계: Gate 한 쌍 관리 객체
+    // (Gate가 사라질 때 그 자리는 USED_GATE_WALL 로 바뀌어 다시는 Gate가 안 뜸)
+    Gate gate;
+
     srand((unsigned int)time(NULL)); // 랜덤 시드
 
     // rand()는 사실상 시드 값 기반의 "가짜 난수"
@@ -64,7 +71,8 @@ int main() {
         clear();
         map.draw(0, 0);
         mvprintw(map.getHeight() + 1, 0,
-                 "[Stage 1] 화살표 = 이동, q = 종료");
+                 "[Stage 4] 화살표 = 이동, q = 종료  |  Gate 사용: %d",
+                 gate.getUseCount());
         refresh();
 
         // (b) 키 입력 처리
@@ -81,9 +89,13 @@ int main() {
             snake.requestDirection(DIR_RIGHT);
         }
 
-        // (c) 뱀 한 칸 이동
+        // (c) 뱀 한 칸 이동 (Gate 통과 처리는 snake.move 내부에서 위임)
         prepareSpeedItem(map, speedItem, SPEED_ITEM);  // move() 전 스냅샷
-        bool alive = snake.move(map);
+
+        // 4단계: Gate 출현/이동 + 사라진 자리는 USED_GATE_WALL 로 자동 변환
+        gate.update(map, snake);
+
+        bool alive = snake.move(map, &gate);
 
         bool shouldUpdate = updateSpeedItem(map, speedItem, SPEED_ITEM);
         if (shouldUpdate) {

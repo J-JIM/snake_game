@@ -6,7 +6,8 @@
 
 #include "common.h"
 
-class Map;  // 전방 선언
+class Map;   // 전방 선언
+class Gate;  // 전방 선언 (4단계)
 
 class Snake {
 public:
@@ -19,8 +20,9 @@ public:
     void requestDirection(Direction d);
 
     // 한 tick 만큼 이동.
-    // 반환값: true = 정상 진행, false = 게임 오버 (벽/몸통 충돌, 반대방향)
-    bool move(Map& map);
+    // gate 가 nullptr 이면 GATE 셀은 그냥 일반 셀처럼 다룸 (1~3단계 호환)
+    // 반환값: true = 정상 진행, false = 게임 오버 (벽/몸통 충돌, 반대방향, Gate 막힘)
+    bool move(Map& map, Gate* gate = nullptr);
 
     int getLength() const { return length; }
     Direction getDirection() const { return dir; }

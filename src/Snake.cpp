@@ -3,6 +3,7 @@
 
 #include "Snake.h"
 #include "Map.h"
+#include "Gate.h"
 
 // 생성자: 길이 0, 일단 오른쪽 방향
 Snake::Snake() {
@@ -153,7 +154,7 @@ void Snake::requestDirection(Direction d) {
 }
 
 // 한 tick 진행
-bool Snake::move(Map& map) {
+bool Snake::move(Map& map, Gate* gate) {
     // (1) 반대 방향 입력이면 게임 오버 (명세서: 반대 방향키 입력 시 실패)
     if (isOpposite(dir, nextDir) == true) {
         return false;
@@ -176,8 +177,26 @@ bool Snake::move(Map& map) {
 
     // (3) 충돌 검사
     int target = map.getCell(newHeadY, newHeadX);
-    // 벽 충돌
-    if (target == WALL || target == IMMUNE_WALL) {
+
+    // (3-pre) Gate 통과 처리: 머리가 GATE 셀에 진입하려 하면
+    //   다른 Gate 너머 한 칸으로 텔레포트하고 진행 방향도 갱신한다
+    if (target == GATE && gate != nullptr) {
+        int teleY, teleX;
+        Direction teleDir;
+        if (gate->tryTeleport(newHeadY, newHeadX, dir, map,
+                              teleY, teleX, teleDir) == false) {
+            // 출구가 모두 막혀 있으면 통과 불가 → 게임오버
+            return false;
+        }
+        newHeadY = teleY;
+        newHeadX = teleX;
+        dir      = teleDir;
+        nextDir  = teleDir; // 진출 직후 사용자가 누른 키와 충돌 안 나도록 갱신
+        target   = map.getCell(newHeadY, newHeadX);
+    }
+
+    // 벽 충돌 (워프 흔적 USED_GATE_WALL 도 동일하게 충돌)
+    if (target == WALL || target == IMMUNE_WALL || target == USED_GATE_WALL) {
         return false;
     }
     // 자기 몸통 충돌
