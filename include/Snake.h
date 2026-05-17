@@ -19,10 +19,9 @@ public:
     // 사용자가 누른 방향키를 다음 진행 방향으로 예약
     void requestDirection(Direction d);
 
-    // 한 tick 만큼 이동.
-    // gate 가 nullptr 이면 GATE 셀은 그냥 일반 셀처럼 다룸 (1~3단계 호환)
-    // 반환값: true = 정상 진행, false = 게임 오버 (벽/몸통 충돌, 반대방향, Gate 막힘)
-    bool move(Map& map, Gate* gate = nullptr);
+    // 5단계 - 한 tick 만큼 이동.
+    // 5단계 - 반환값: -1 = 게임 오버, 그 외 = 머리가 도착한 칸의 원래 종류(Cell)
+    int move(Map& map, Gate* gate = nullptr);
 
     int getLength() const { return length; }
     Direction getDirection() const { return dir; }

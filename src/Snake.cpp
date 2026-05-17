@@ -153,11 +153,11 @@ void Snake::requestDirection(Direction d) {
     nextDir = d;
 }
 
-// 한 tick 진행
-bool Snake::move(Map& map, Gate* gate) {
+// 5단계 - 한 tick 진행
+int Snake::move(Map& map, Gate* gate) {
     // (1) 반대 방향 입력이면 게임 오버 (명세서: 반대 방향키 입력 시 실패)
     if (isOpposite(dir, nextDir) == true) {
-        return false;
+        return -1;
     }
     // 이번 tick 부터 새 방향 적용
     dir = nextDir;
@@ -186,7 +186,7 @@ bool Snake::move(Map& map, Gate* gate) {
         if (gate->tryTeleport(newHeadY, newHeadX, dir, map,
                               teleY, teleX, teleDir) == false) {
             // 출구가 모두 막혀 있으면 통과 불가 → 게임오버
-            return false;
+            return -1;
         }
         newHeadY = teleY;
         newHeadX = teleX;
@@ -197,15 +197,18 @@ bool Snake::move(Map& map, Gate* gate) {
 
     // 벽 충돌 (워프 흔적 USED_GATE_WALL 도 동일하게 충돌)
     if (target == WALL || target == IMMUNE_WALL || target == USED_GATE_WALL) {
-        return false;
+        return -1;
     }
     // 자기 몸통 충돌
     // 단, 꼬리(body[length-1])는 이번 tick 에 비워질 자리라서 제외
     for (int i = 0; i < length - 1; i++) {
         if (body[i].y == newHeadY && body[i].x == newHeadX) {
-            return false;
+            return -1;
         }
     }
+
+    // 5단계 - 이동 전의 target 셀 값을 반환하기 위해 보관
+    int result = target;
 
     // (4) 아이템 종류에 따라 꼬리 처리 분기 설정
     if (target == GROWTH_ITEM) {
@@ -217,7 +220,7 @@ bool Snake::move(Map& map, Gate* gate) {
 
         if (target == POISON_ITEM){
             if (length - 1 < 3) {
-                return false; // RULE 2에 따라 몸의 길이가 3 이하면 실패
+                return -1; // RULE 2에 따라 몸의 길이가 3 이하면 실패
             }
             length--;
             // 독을 먹어서 잘려나간 꼬리 좌표 제거
@@ -240,5 +243,5 @@ bool Snake::move(Map& map, Gate* gate) {
         // 머리 바로 뒤 칸은 이제 몸통으로 표시
         map.setCell(body[1].y, body[1].x, SNAKE_BODY);
     }
-    return true;
+    return result;
 }

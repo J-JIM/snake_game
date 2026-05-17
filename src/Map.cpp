@@ -2,16 +2,19 @@
 // 맵 데이터를 보관하고, 파일에서 읽고, 화면에 그리는 클래스 구현
 
 #include "Map.h"
-#include "curses_compat.h"  // OS별 curses 호환 레이어
+#include "curses_compat.h" // OS별 curses 호환 레이어
 #include <fstream>
 #include <string>
 
 // 생성자: 맵 전체를 빈칸(0)으로 초기화
-Map::Map() {
+Map::Map()
+{
   height = 0;
   width = 0;
-  for (int y = 0; y < MAP_MAX_SIZE; y++) {
-    for (int x = 0; x < MAP_MAX_SIZE; x++) {
+  for (int y = 0; y < MAP_MAX_SIZE; y++)
+  {
+    for (int x = 0; x < MAP_MAX_SIZE; x++)
+    {
       data[y][x] = EMPTY;
     }
   }
@@ -19,9 +22,11 @@ Map::Map() {
 
 // 텍스트 파일에서 맵 읽기
 // 파일 형식: 첫 줄에 "행 열", 그 다음부터 한 줄에 한 행씩 숫자 나열
-bool Map::loadFromFile(const char *filename) {
+bool Map::loadFromFile(const char *filename)
+{
   std::ifstream fin(filename);
-  if (fin.is_open() == false) {
+  if (fin.is_open() == false)
+  {
     return false;
   }
 
@@ -35,19 +40,26 @@ bool Map::loadFromFile(const char *filename) {
     return false;
 
   // 한 줄씩 읽어서 각 글자를 정수로 바꿔서 저장
-  for (int y = 0; y < height; y++) {
+  for (int y = 0; y < height; y++)
+  {
     std::string line;
-    fin >> line;
-    for (int x = 0; x < width; x++) {
-      // '0' ~ '7' 문자를 0 ~ 7 정수로 변환
-      data[y][x] = line[x] - '0';
+    if (!(fin >> line)) break; // 읽기 실패 시 중단
+    for (int x = 0; x < width; x++)
+    {
+      if (x < (int)line.length()) {
+        // '0' ~ '9' 문자를 정수로 변환
+        data[y][x] = line[x] - '0';
+      } else {
+        data[y][x] = EMPTY;
+      }
     }
   }
   return true;
 }
 
 // 한 칸 값 읽기. 범위를 벗어나면 WALL 로 처리해서 충돌 검사가 안전하게 됨
-int Map::getCell(int y, int x) const {
+int Map::getCell(int y, int x) const
+{
   if (y < 0 || y >= height)
     return WALL;
   if (x < 0 || x >= width)
@@ -56,7 +68,8 @@ int Map::getCell(int y, int x) const {
 }
 
 // 한 칸 값 바꾸기
-void Map::setCell(int y, int x, int value) {
+void Map::setCell(int y, int x, int value)
+{
   if (y < 0 || y >= height)
     return;
   if (x < 0 || x >= width)
@@ -64,8 +77,26 @@ void Map::setCell(int y, int x, int value) {
   data[y][x] = value;
 }
 
+// 5단계 - 벽 개수 파악 (가장자리인 IMMUNE_WALL(2)은 제외하고 게이트가 될 수 있는 WALL(1)만 카운트)
+int Map::countInternalWalls() const
+{
+  int count = 0;
+  for (int y = 0; y < height; y++)
+  {
+    for (int x = 0; x < width; x++)
+    {
+      if (data[y][x] == WALL)
+      {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
 // ncurses 색 페어 초기화. 게임 시작할 때 한 번만 부르면 됨.
-void Map::initColors() const {
+void Map::initColors() const
+{
   init_pair(WALL, COLOR_WHITE, COLOR_WHITE);
   // Immune Wall: 터미널 검정 배경에서는 BLACK이 보이지 않으므로
   // 일단 Wall과 동일한 회색으로 표시 (데이터상 1/2 구분은 유지됨)
@@ -82,17 +113,23 @@ void Map::initColors() const {
 
 // 맵 전체를 화면에 그리기
 // (offsetY, offsetX) 부터 시작해서, 한 칸은 화면에서 두 글자 폭으로 표시
-void Map::draw(int offsetY, int offsetX) const {
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
+void Map::draw(int offsetY, int offsetX) const
+{
+  for (int y = 0; y < height; y++)
+  {
+    for (int x = 0; x < width; x++)
+    {
       int cell = data[y][x];
       int screenY = offsetY + y;
       int screenX = offsetX + x * CELL_WIDTH;
 
-      if (cell == EMPTY) {
+      if (cell == EMPTY)
+      {
         // 빈칸은 그냥 공백 두 글자
         mvprintw(screenY, screenX, "  ");
-      } else {
+      }
+      else
+      {
         // 다른 셀은 해당 색을 적용해서 공백 두 글자 출력
         attron(COLOR_PAIR(cell));
         mvprintw(screenY, screenX, "  ");
