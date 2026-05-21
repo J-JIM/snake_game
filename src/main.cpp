@@ -15,11 +15,12 @@
 #include "BlockWall.h"  // 4단계 (3) 테트리스 블록 벽
 #include "ScoreBoard.h" // 5단계 - 스코어 보드 및 미션
 
-// 1 tick 간격 (마이크로초 단위). 200000 = 0.2초
-const int TICK_USEC = 200000;
-
 int main()
 {
+    // 1 tick 간격 (마이크로초 단위). 200000 = 0.2초
+    // 전역변수를 두지 않기 위해 main 함수 안의 지역 상수로 선언
+    const int TICK_USEC = 200000;
+
     // 한글 출력을 위해 시스템 locale 사용
     setlocale(LC_ALL, "");
 
@@ -67,9 +68,9 @@ int main()
         ScoreBoard scoreBoard(currentStageIdx + 1, map.countInternalWalls());
         scoreBoard.updateLength(snake.getLength());
 
-        Item growthItem = {0, 0, false, 0, 0, 0, false};
-        Item poisonItem = {0, 0, false, 0, 0, 0, false};
-        Item speedItem = {0, 0, false, 0, 0, 0, false};
+        Item growthItem(GROWTH_ITEM);
+        Item poisonItem(POISON_ITEM);
+        Item speedItem(SPEED_ITEM);
         Gate gate;
         BlockWall blockWall; // 4단계 (3) 테트리스 블록 벽
 
@@ -88,7 +89,7 @@ int main()
             refresh();
 
             // (b) 키 입력 처리 및 tick 대기 (입력 반응성을 높이기 위해 polling 방식 사용)
-            int waitTime = isSpeedActive(speedItem) ? TICK_USEC / 2 : TICK_USEC;
+            int waitTime = speedItem.isSpeedActive() ? TICK_USEC / 2 : TICK_USEC;
             int elapsed = 0;
             const int pollInterval = 10000; // 5단계 - 10ms 단위
 
@@ -116,7 +117,7 @@ int main()
             }
 
             // (c) 뱀 이동 및 상태 업데이트
-            prepareSpeedItem(map, speedItem, SPEED_ITEM);
+            speedItem.prepareSpeed(map);
 
             // 미션 가능 여부 체크
             scoreBoard.setInternalWalls(map.countInternalWalls());
@@ -153,11 +154,11 @@ int main()
 
                 scoreBoard.updateLength(snake.getLength());
 
-                bool shouldUpdate = updateSpeedItem(map, speedItem, SPEED_ITEM);
+                bool shouldUpdate = speedItem.updateSpeed(map);
                 if (shouldUpdate)
                 {
-                    updateItem(map, growthItem, GROWTH_ITEM);
-                    updateItem(map, poisonItem, POISON_ITEM);
+                    growthItem.update(map);
+                    poisonItem.update(map);
                 }
 
                 if (scoreBoard.isAllMissionComplete())
