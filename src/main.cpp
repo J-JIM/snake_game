@@ -12,6 +12,7 @@
 #include "Snake.h"
 #include "Item.h"
 #include "Gate.h"       // 4단계 (Gate + (3) 워프 흔적 동작 포함)
+#include "BlockWall.h"  // 4단계 (3) 테트리스 블록 벽
 #include "ScoreBoard.h" // 5단계 - 스코어 보드 및 미션
 
 // 1 tick 간격 (마이크로초 단위). 200000 = 0.2초
@@ -70,6 +71,7 @@ int main()
         Item poisonItem = {0, 0, false, 0, 0, 0, false};
         Item speedItem = {0, 0, false, 0, 0, 0, false};
         Gate gate;
+        BlockWall blockWall; // 4단계 (3) 테트리스 블록 벽
 
         bool stageClear = false;
         bool gameOver = false;
@@ -128,6 +130,7 @@ int main()
 
             int prevGateUseCount = gate.getUseCount();
             gate.update(map, snake);
+            blockWall.update(map, snake); // 4단계 (3) 블록 벽 예고/출현/소멸
             int target = snake.move(map, &gate);
 
             if (gate.getUseCount() > prevGateUseCount)

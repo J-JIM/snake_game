@@ -109,6 +109,9 @@ void Map::initColors() const
   init_pair(SPEED_ITEM, COLOR_CYAN, COLOR_CYAN);
   // Gate가 한 번 떴던 자리 - 시각적으로 회색 Wall과 구분되도록 노랑 사용
   init_pair(USED_GATE_WALL, COLOR_YELLOW, COLOR_YELLOW);
+  // 테트리스 블록 벽 - 굳은 벽은 회색, 출현 1초 전 예고는 빨강
+  init_pair(BLOCK_WALL, COLOR_WHITE, COLOR_WHITE);
+  init_pair(BLOCK_WARN, COLOR_RED, COLOR_RED);
 }
 
 // 맵 전체를 화면에 그리기
