@@ -1,3 +1,8 @@
+// Map.h
+// 게임판(board)을 담당하는 Map 클래스.
+//   맵 데이터를 2차원 배열로 보관하고, 텍스트 파일에서 읽어오며,
+//   ncurses 화면에 색으로 그린다. 모든 단계가 이 Map을 공유한다.
+
 #ifndef MAP_H
 #define MAP_H
 

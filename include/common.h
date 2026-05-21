@@ -1,3 +1,10 @@
+// common.h
+// 프로젝트 전체가 공유하는 공용 정의 모음.
+//   - enum Cell      : 맵 한 칸이 가질 수 있는 셀 값
+//   - enum Direction : 뱀의 이동 방향
+//   - 맵 크기·뱀 길이 등 상수
+//   - struct Position: 좌표 한 쌍
+
 #ifndef COMMON_H
 #define COMMON_H
 
