@@ -30,6 +30,13 @@ public:
     // 5단계 - 모든 미션 달성 여부 확인
     bool isAllMissionComplete() const;
 
+    // 점수 및 기록 조회 게터
+    int getMaxLength() const { return maxLength; }
+    int getGrowthCount() const { return growthCount; }
+    int getPoisonCount() const { return poisonCount; }
+    int getSpeedCount() const { return speedCount; }
+    int getGateCount() const { return gateCount; }
+
     // 5단계 - 화면에 그리기
     void draw(int offsetY, int offsetX) const;
 

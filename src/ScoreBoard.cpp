@@ -121,36 +121,96 @@ bool ScoreBoard::isAllMissionComplete() const
 
 void ScoreBoard::draw(int offsetY, int offsetX) const
 {
-    // 5단계 - Score Board
-    attron(A_BOLD);
-    mvprintw(offsetY, offsetX, "Score Board");
-    attroff(A_BOLD);
-    mvprintw(offsetY + 1, offsetX, "B: %d / %d", currentLength, maxLength);
-    mvprintw(offsetY + 2, offsetX, "+: %d", growthCount);
-    mvprintw(offsetY + 3, offsetX, "-: %d", poisonCount);
-    mvprintw(offsetY + 4, offsetX, "S: %d", speedCount);
-    mvprintw(offsetY + 5, offsetX, "G: %d (Max:%d)", gateCount, currentInternalWalls / 2);
+    // Draw Box for Score Board
+    // Header (No emojis)
+    attron(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_SPEED));
+    mvprintw(offsetY, offsetX, "╔══════════════════════════╗");
+    mvprintw(offsetY + 1, offsetX, "║    STAGE %d SCOREBOARD    ║", stage);
+    mvprintw(offsetY + 2, offsetX, "╠══════════════════════════╣");
+    attroff(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_SPEED));
 
-    // 5단계 - Mission
-    int mOffset = offsetY + 7;
-    attron(A_BOLD);
-    mvprintw(mOffset, offsetX, "Mission");
-    attroff(A_BOLD);
-    mvprintw(mOffset + 1, offsetX, "B: %d (%c)", targetLength, missionLength ? 'v' : ' ');
-    mvprintw(mOffset + 2, offsetX, "+: %d (%c)", targetGrowth, missionGrowth ? 'v' : ' ');
-    mvprintw(mOffset + 3, offsetX, "-: %d (%c)", targetPoison, missionPoison ? 'v' : ' ');
-    mvprintw(mOffset + 4, offsetX, "S: %d (%c)", targetSpeed, missionSpeed ? 'v' : ' ');
-    mvprintw(mOffset + 5, offsetX, "G: %d (%c)", targetGate, missionGate ? 'v' : ' ');
+    // Stats
+    mvprintw(offsetY + 3, offsetX, "║  Length  : %2d / %-2d       ║", currentLength, maxLength);
 
-    // 5단계 - Help (English version for stability)
-    int hOffset = mOffset + 7;
-    attron(A_UNDERLINE);
-    mvprintw(hOffset, offsetX, "Help");
-    attroff(A_UNDERLINE);
-    mvprintw(hOffset + 1, offsetX, "B: 몸의 길이(현재/최대)");
-    mvprintw(hOffset + 2, offsetX, "+/-: 몸의 길이 증가/감소");
-    mvprintw(hOffset + 3, offsetX, "S: 속도 증가");
-    mvprintw(hOffset + 4, offsetX, "G: 게이트 통과 횟수");
-    mvprintw(hOffset + 5, offsetX, "Max: 남은 게이트 생성 횟수");
-    mvprintw(hOffset + 6, offsetX, "!: 벽충돌 또는 몸 길이 3 미만시 게임오버");
+    // Growth (Green Box)
+    mvprintw(offsetY + 4, offsetX, "║  ");
+    attron(COLOR_PAIR(GROWTH_ITEM));
+    mvprintw(offsetY + 4, offsetX + 3, "  ");
+    attroff(COLOR_PAIR(GROWTH_ITEM));
+    mvprintw(offsetY + 4, offsetX + 5, " Growth : %-2d          ║", growthCount);
+
+    // Poison (Red Box)
+    mvprintw(offsetY + 5, offsetX, "║  ");
+    attron(COLOR_PAIR(POISON_ITEM));
+    mvprintw(offsetY + 5, offsetX + 3, "  ");
+    attroff(COLOR_PAIR(POISON_ITEM));
+    mvprintw(offsetY + 5, offsetX + 5, " Poison : %-2d          ║", poisonCount);
+
+    // Speed (Cyan Box)
+    mvprintw(offsetY + 6, offsetX, "║  ");
+    attron(COLOR_PAIR(SPEED_ITEM));
+    mvprintw(offsetY + 6, offsetX + 3, "  ");
+    attroff(COLOR_PAIR(SPEED_ITEM));
+    mvprintw(offsetY + 6, offsetX + 5, " Speed  : %-2d          ║", speedCount);
+
+    // Gate (Magenta Box)
+    mvprintw(offsetY + 7, offsetX, "║  ");
+    attron(COLOR_PAIR(GATE));
+    mvprintw(offsetY + 7, offsetX + 3, "  ");
+    attroff(COLOR_PAIR(GATE));
+    mvprintw(offsetY + 7, offsetX + 5, " Gate   : %-2d (Max:%2d) ║", gateCount, currentInternalWalls / 2);
+    
+    mvprintw(offsetY + 8, offsetX, "╚══════════════════════════╝");
+
+    // Draw Box for Missions
+    int mOffset = offsetY + 10;
+    attron(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE));
+    mvprintw(mOffset, offsetX, "╔══════════════════════════╗");
+    mvprintw(mOffset + 1, offsetX, "║         MISSIONS         ║");
+    mvprintw(mOffset + 2, offsetX, "╠══════════════════════════╣");
+    attroff(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE));
+
+    auto printMissionRow = [&](int row, int cellType, const char* labelStr, int current, int target, bool complete) {
+        mvprintw(mOffset + row, offsetX, "║  ");
+        if (cellType > 0) {
+            attron(COLOR_PAIR(cellType));
+            mvprintw(mOffset + row, offsetX + 3, "  ");
+            attroff(COLOR_PAIR(cellType));
+            mvprintw(mOffset + row, offsetX + 5, " %s : %2d / %-2d", labelStr, current, target);
+        } else {
+            mvprintw(mOffset + row, offsetX + 3, "Length : %2d / %-2d   ", current, target);
+        }
+
+        if (complete) {
+            attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
+            mvprintw(mOffset + row, offsetX + 23, "[V]");
+            attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
+        } else {
+            attron(COLOR_PAIR(COLOR_PAIR_TEXT_POISON));
+            mvprintw(mOffset + row, offsetX + 23, "[ ]");
+            attroff(COLOR_PAIR(COLOR_PAIR_TEXT_POISON));
+        }
+        mvprintw(mOffset + row, offsetX + 27, "║");
+    };
+
+    printMissionRow(3, 0, "Length", currentLength, targetLength, missionLength);
+    printMissionRow(4, GROWTH_ITEM, "Growth", growthCount, targetGrowth, missionGrowth);
+    printMissionRow(5, POISON_ITEM, "Poison", poisonCount, targetPoison, missionPoison);
+    printMissionRow(6, SPEED_ITEM, "Speed ", speedCount, targetSpeed, missionSpeed);
+    printMissionRow(7, GATE, "Gate  ", gateCount, targetGate, missionGate);
+    mvprintw(mOffset + 8, offsetX, "╚══════════════════════════╝");
+
+    // Draw Box for Controls/Help
+    int hOffset = mOffset + 10;
+    attron(A_DIM);
+    mvprintw(hOffset, offsetX, "╔══════════════════════════╗");
+    mvprintw(hOffset + 1, offsetX, "║      조작법 및 정보      ║");
+    mvprintw(hOffset + 2, offsetX, "╠══════════════════════════╣");
+    mvprintw(hOffset + 3, offsetX, "║  방향키: 스네이크 이동   ║");
+    mvprintw(hOffset + 4, offsetX, "║  Q 키  : 스테이지 종료   ║");
+    mvprintw(hOffset + 5, offsetX, "║                          ║");
+    mvprintw(hOffset + 6, offsetX, "║  ! 충돌 또는 길이 3 미만 ║");
+    mvprintw(hOffset + 7, offsetX, "║    시 게임오버가 됩니다  ║");
+    mvprintw(hOffset + 8, offsetX, "╚══════════════════════════╝");
+    attroff(A_DIM);
 }

@@ -15,6 +15,17 @@ enum Cell {
     USED_GATE_WALL  = 9   // 4단계 (3) 워프 흔적 - 한 번 Gate가 떴던 자리, 다시는 Gate 안 생김
 };
 
+// 텍스트 출력용 전용 색 페어 ID (배경을 검은색으로 지정하여 글씨 가독성 확보)
+enum TextColorPair {
+    COLOR_PAIR_TEXT_GROWTH    = 15,
+    COLOR_PAIR_TEXT_POISON    = 16,
+    COLOR_PAIR_TEXT_SPEED     = 17,
+    COLOR_PAIR_TEXT_GATE      = 18,
+    COLOR_PAIR_TEXT_USED_GATE = 19
+};
+
+
+
 // 이동 방향
 enum Direction {
     DIR_UP = 0,

@@ -15,7 +15,7 @@ CXXFLAGS = -std=c++14 -Wall -O2 -Iinclude
 
 # OS 감지해서 링크 옵션 결정
 ifeq ($(OS),Windows_NT)
-    LDFLAGS = -lpdcurses
+    LDFLAGS = -L. -lpdcurses
 else
     UNAME_S := $(shell uname -s)
     ifeq ($(UNAME_S),Darwin)
@@ -26,7 +26,7 @@ else
 endif
 
 TARGET   = snake
-SRCS     = src/main.cpp src/Map.cpp src/Snake.cpp src/Item.cpp src/Gate.cpp src/ScoreBoard.cpp
+SRCS     = src/main.cpp src/Map.cpp src/Snake.cpp src/Item.cpp src/Gate.cpp src/ScoreBoard.cpp src/GameController.cpp src/RankingManager.cpp
 OBJS     = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
