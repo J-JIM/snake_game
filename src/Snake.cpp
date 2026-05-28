@@ -195,8 +195,10 @@ int Snake::move(Map& map, Gate* gate) {
         target   = map.getCell(newHeadY, newHeadX);
     }
 
-    // 벽 충돌 (워프 흔적 USED_GATE_WALL 도 동일하게 충돌)
-    if (target == WALL || target == IMMUNE_WALL || target == USED_GATE_WALL) {
+    // 벽 충돌 (워프 흔적 USED_GATE_WALL, 블록 벽 BLOCK_WALL 도 동일하게 충돌)
+    // BLOCK_WARN(예고)은 아직 벽이 아니므로 통과 가능 → 충돌 목록에서 제외
+    if (target == WALL || target == IMMUNE_WALL ||
+        target == USED_GATE_WALL || target == BLOCK_WALL) {
         return -1;
     }
     // 자기 몸통 충돌

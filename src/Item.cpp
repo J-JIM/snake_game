@@ -1,75 +1,125 @@
+// Item.cpp
+// Item 클래스 구현 - 아이템의 출현/수명/획득 처리
+//   Growth 와 Poison 은 동작이 같아 update() 를 공용으로 쓰고,
+//   Speed 는 속도 효과 때문에 prepareSpeed()/updateSpeed() 를 따로 둔다.
+
 #include "Item.h"
+#include "Map.h"
 #include <cstdlib>
 #include <vector>
 
-void spawnItem(Map& map, Item& item, int cellType) {
+// 아이템이 맵 위에 머무는 기본 수명 (tick)
+static const int ITEM_LIFETIME = 30;
+// Speed 효과 지속 시간 (tick)
+static const int SPEED_EFFECT_DURATION = 30;
+
+// 생성자 - 종류만 정하고, 실제 배치는 첫 update()/updateSpeed() 에서 spawn() 이 담당
+Item::Item(int kind)
+    : kind(kind), y(0), x(0), active(false),
+      timer(0), effectTimer(0), tickCounter(0), wasOnMap(false)
+{
+}
+
+// 빈 칸 중 하나를 무작위로 골라 아이템을 배치
+void Item::spawn(Map &map)
+{
     std::vector<Position> empties;
     // 맵 전체를 돌며 빈 칸 수집
-    for (int y = 0; y < map.getHeight(); y++) {
-        for (int x = 0; x < map.getWidth(); x++) {
-            if (map.getCell(y, x) == EMPTY) {
-                empties.push_back({y, x});
+    for (int cy = 0; cy < map.getHeight(); cy++)
+    {
+        for (int cx = 0; cx < map.getWidth(); cx++)
+        {
+            if (map.getCell(cy, cx) == EMPTY)
+            {
+                Position p = {cy, cx};
+                empties.push_back(p);
             }
         }
     }
-    if (empties.empty()) return;
+    if (empties.empty())
+        return;
 
-    // 맵에서 EMPTY인 칸 중 하나를 무작위로 선택(% size로 범위 외 값 불러오기 방지)
-    int idx = rand() % empties.size();
-    item.y = empties[idx].y; // 아이템 스폰 y좌표
-    item.x = empties[idx].x; // 아이템 스폰 x좌표
-    item.active = true; 
-    item.timer = 30; // 아이템 유통 기한
-    map.setCell(item.y, item.x, cellType);
+    // EMPTY 칸 중 하나를 무작위 선택 (% size 로 범위 밖 접근 방지)
+    int idx = rand() % (int)empties.size();
+    y = empties[idx].y;
+    x = empties[idx].x;
+    active = true;
+    timer = ITEM_LIFETIME;
+    map.setCell(y, x, kind);
 }
 
-void updateItem(Map& map, Item& item, int cellType) {
-    if (!item.active) { // 아이템이 active 하지 않은 경우(초기 상태)
-        spawnItem(map, item, cellType);
+// Growth · Poison 갱신
+void Item::update(Map &map)
+{
+    // 아직 한 번도 출현하지 않은 초기 상태
+    if (active == false)
+    {
+        spawn(map);
         return;
     }
 
-    // item이 있어야 할 셀에 cellType이 아이템이 아닌 무언가다!
-    // = 뱀이 먹었을 때를 정의함.
-    if (map.getCell(item.y, item.x) != cellType) {
-        spawnItem(map, item, cellType);
+    // 아이템이 있어야 할 칸이 더 이상 해당 종류가 아니다 = 뱀이 먹었다
+    if (map.getCell(y, x) != kind)
+    {
+        spawn(map);
         return;
     }
 
-    item.timer--;
-    if (item.timer <= 0) { // 아이템 유통 기한 만료 시
-        map.setCell(item.y, item.x, EMPTY); // 아이템 제거
-        spawnItem(map, item, cellType); // 새로운 곳에 아이템 재생성
+    // 수명 차감, 만료되면 제거 후 다른 자리에 재출현
+    timer--;
+    if (timer <= 0)
+    {
+        map.setCell(y, x, EMPTY);
+        spawn(map);
     }
 }
 
-// move() 직전에 호출 — 속도 아이템이 맵에 있었는지 스냅샷 저장
-void prepareSpeedItem(Map& map, Item& item, int cellType) {
-    item.wasOnMap = item.active && map.getCell(item.y, item.x) == cellType;
+// move() 직전 - 이번 tick 시작 시점에 Speed 아이템이 맵에 있었는지 기록
+void Item::prepareSpeed(const Map &map)
+{
+    wasOnMap = active && (map.getCell(y, x) == kind);
 }
 
-// move() 직후에 호출
-// 먹힘 감지 후 effectTimer 세팅, 아이템 갱신 주기 관리
-// 반환값: 이번 틱에 다른 아이템 growth/poison도 갱신해야 하면 true
-bool updateSpeedItem(Map& map, Item& item, int cellType) {
-    item.tickCounter++;
-    bool shouldUpdate = (item.effectTimer <= 0) || (item.tickCounter % 2 == 0);
+// move() 직후 - 먹힘 감지 후 효과 타이머 세팅, 갱신 주기 관리
+// 반환값: 이번 tick 에 Growth/Poison 도 갱신해야 하면 true
+bool Item::updateSpeed(Map &map)
+{
+    tickCounter++;
+    // 효과가 없을 때는 매 tick, 효과 중에는 2 tick 마다 1번만 갱신
+    bool shouldUpdate = (effectTimer <= 0) || (tickCounter % 2 == 0);
 
-    if (shouldUpdate) {
-        // updateItem 전에 먹힘 여부 확인 (이후엔 좌표가 바뀜)
-        if (item.wasOnMap && map.getCell(item.y, item.x) != cellType) {
-            item.effectTimer = 30;
+    if (shouldUpdate)
+    {
+        // update() 로 좌표가 바뀌기 전에 먹힘 여부 먼저 확인
+        if (wasOnMap && map.getCell(y, x) != kind)
+        {
+            effectTimer = SPEED_EFFECT_DURATION;
         }
-        updateItem(map, item, cellType);
+        update(map);
     }
 
-    if (item.effectTimer > 0) {
-        item.effectTimer--;
+    if (effectTimer > 0)
+    {
+        effectTimer--;
     }
 
     return shouldUpdate;
 }
 
-bool isSpeedActive(const Item& item) {
-    return item.effectTimer > 0;
+// Speed 효과 지속 중인지 여부
+bool Item::isSpeedActive() const
+{
+    return effectTimer > 0;
+}
+
+// 아이템 상태 초기화 (const kind를 유지하며 상태 변수들만 초기 값으로 리셋)
+void Item::reset()
+{
+    y = 0;
+    x = 0;
+    active = false;
+    timer = 0;
+    effectTimer = 0;
+    tickCounter = 0;
+    wasOnMap = false;
 }

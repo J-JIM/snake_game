@@ -27,6 +27,7 @@ static int getUtf8VisualWidth(const std::string& str) {
 
 GameController::GameController(int stageNum, const std::string& mapFilePath)
     : stageNum(stageNum), mapFilePath(mapFilePath), scoreBoard(stageNum, 0),
+      growthItem(GROWTH_ITEM), poisonItem(POISON_ITEM), speedItem(SPEED_ITEM),
       isRunning(false), gameOver(false), stageClear(false), userQuit(false) {}
 
 bool GameController::initialize() {
@@ -43,9 +44,10 @@ bool GameController::initialize() {
     scoreBoard = ScoreBoard(stageNum, map.countInternalWalls());
     scoreBoard.updateLength(snake.getLength());
 
-    growthItem = {0, 0, false, 0, 0, 0, false};
-    poisonItem = {0, 0, false, 0, 0, 0, false};
-    speedItem = {0, 0, false, 0, 0, 0, false};
+    growthItem.reset();
+    poisonItem.reset();
+    speedItem.reset();
+    blockWall = BlockWall();
     
     isRunning = true;
     gameOver = false;
@@ -75,7 +77,7 @@ GameResult GameController::run() {
 }
 
 void GameController::waitAndProcessInput() {
-    int waitTime = isSpeedActive(speedItem) ? TICK_USEC / 2 : TICK_USEC;
+    int waitTime = speedItem.isSpeedActive() ? TICK_USEC / 2 : TICK_USEC;
     int elapsed = 0;
     const int pollInterval = 10000; // 10ms 단위 폴링
 
@@ -99,7 +101,7 @@ void GameController::waitAndProcessInput() {
 
 void GameController::update() {
     // 뱀의 이동 직전, 속도 아이템 수명 및 상태 정보의 스냅샷 준비
-    prepareSpeedItem(map, speedItem, SPEED_ITEM);
+    speedItem.prepareSpeed(map);
 
     // 미션 가능 여부 실시간 체크
     scoreBoard.setInternalWalls(map.countInternalWalls());
@@ -131,6 +133,7 @@ void GameController::update() {
 
     int prevGateUseCount = gate.getUseCount();
     gate.update(map, snake);
+    blockWall.update(map, snake);
 
     // 뱀 한 칸 이동 시도
     int target = snake.move(map, &gate);
@@ -152,10 +155,10 @@ void GameController::update() {
         scoreBoard.updateLength(snake.getLength());
 
         // 아이템 틱 갱신 및 스폰 진행
-        bool shouldUpdate = updateSpeedItem(map, speedItem, SPEED_ITEM);
+        bool shouldUpdate = speedItem.updateSpeed(map);
         if (shouldUpdate) {
-            updateItem(map, growthItem, GROWTH_ITEM);
-            updateItem(map, poisonItem, POISON_ITEM);
+            growthItem.update(map);
+            poisonItem.update(map);
         }
 
         if (scoreBoard.isAllMissionComplete()) {
