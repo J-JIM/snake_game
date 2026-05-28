@@ -101,17 +101,15 @@ void ScoreBoard::updateLength(int len)
 
 void ScoreBoard::checkMissions()
 {
-    // 5단계 - 현재 점수가 목표치를 달성했는지 실시간 확인
-    if (currentLength >= targetLength)
-        missionLength = true;
-    if (growthCount >= targetGrowth)
-        missionGrowth = true;
-    if (poisonCount >= targetPoison)
-        missionPoison = true;
-    if (speedCount >= targetSpeed)
-        missionSpeed = true;
-    if (gateCount >= targetGate)
-        missionGate = true;
+    // 5단계 - 매번 현재 값으로 재평가한다(양방향)
+    // 길이(Length)는 Poison 등으로 줄어들 수 있으므로, 목표 미달이면
+    // 달성 표시도 해제되어야 한다. 
+    // Growth/Poison/Speed/Gate 는 누적값이라 줄지 않으므로 사실상 한 번 달성하면 유지
+    missionLength = (currentLength >= targetLength);
+    missionGrowth = (growthCount >= targetGrowth);
+    missionPoison = (poisonCount >= targetPoison);
+    missionSpeed  = (speedCount >= targetSpeed);
+    missionGate   = (gateCount >= targetGate);
 }
 
 bool ScoreBoard::isAllMissionComplete() const

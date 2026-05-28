@@ -40,6 +40,7 @@ bool Map::loadFromFile(const char *filename)
     return false;
 
   // 한 줄씩 읽어서 각 글자를 정수로 바꿔서 저장
+  int rowsRead = 0;
   for (int y = 0; y < height; y++)
   {
     std::string line;
@@ -53,7 +54,12 @@ bool Map::loadFromFile(const char *filename)
         data[y][x] = EMPTY;
       }
     }
+    rowsRead++;
   }
+
+  // 실제로 읽은 행 수로 height 를 보정한다.
+  // (헤더의 행 수가 실제 데이터보다 크면, 보이는 맵 아래에 빈 행이 생겨 그 자리에 아이템/블록 벽이 스폰되는 버그가 생기므로 방지)
+  height = rowsRead;
   return true;
 }
 
@@ -77,7 +83,8 @@ void Map::setCell(int y, int x, int value)
   data[y][x] = value;
 }
 
-// 5단계 - 벽 개수 파악 (가장자리인 IMMUNE_WALL(2)은 제외하고 게이트가 될 수 있는 WALL(1)만 카운트)
+// 5단계 - 벽 개수 파악
+// 가장자리인 IMMUNE_WALL(2)은 제외하고 게이트가 될 수 있는 WALL(1)만 카운트
 int Map::countInternalWalls() const
 {
   int count = 0;
@@ -97,7 +104,8 @@ int Map::countInternalWalls() const
 // ncurses 색 페어 초기화. 게임 시작할 때 한 번만 부르면 됨.
 void Map::initColors() const
 {
-  // 맵 요소 드로잉용 (오리지널과 동일하게 글자색과 배경색을 통일하여 꽉 찬 블록으로 표현)
+  // 맵 요소 드로잉용
+  // 오리지널과 동일하게 글자색과 배경색을 통일하여 꽉 찬 블록으로 표현
   init_pair(WALL, COLOR_WHITE, COLOR_WHITE);
   init_pair(IMMUNE_WALL, COLOR_WHITE, COLOR_WHITE);
   init_pair(SNAKE_HEAD, COLOR_YELLOW, COLOR_YELLOW);
@@ -107,14 +115,15 @@ void Map::initColors() const
   init_pair(GATE, COLOR_MAGENTA, COLOR_MAGENTA);
   init_pair(SPEED_ITEM, COLOR_CYAN, COLOR_CYAN);
   init_pair(USED_GATE_WALL, COLOR_YELLOW, COLOR_YELLOW);
-  // 스코어보드 및 각종 메뉴 텍스트 출력용 (글자 가독성을 위해 배경을 검정색으로 지정)
+  // 스코어보드 및 각종 메뉴 텍스트 출력용
   init_pair(COLOR_PAIR_TEXT_GROWTH, COLOR_GREEN, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_POISON, COLOR_RED, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_SPEED, COLOR_CYAN, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_GATE, COLOR_MAGENTA, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_USED_GATE, COLOR_YELLOW, COLOR_BLACK);
 
-  // 테트리스 블록 벽 - 굳은 벽은 회색, 출현 1초 전 예고는 빨강
+  // 테트리스 블록 벽
+  // 굳은 벽은 회색, 출현 1초 전 예고는 빨강
   init_pair(BLOCK_WALL, COLOR_WHITE, COLOR_WHITE);
   init_pair(BLOCK_WARN, COLOR_RED, COLOR_RED);
 }

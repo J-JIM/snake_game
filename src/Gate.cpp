@@ -7,12 +7,12 @@
 #include <cstdlib>
 #include <vector>
 
-// 동작 파라미터 (필요하면 손쉽게 튜닝)
+// 동작 파라미터
 static const int GATE_FIRST_WAIT     = 30;   // 게임 시작 후 첫 출현까지 tick
 static const int GATE_LIFETIME       = 100;  // 한 쌍이 살아 있는 tick 수
 static const int GATE_RESPAWN_WAIT   = 30;   // 사라진 뒤 다음 쌍까지 대기 tick
 
-// ----------- 작은 헬퍼들 (파일 내부에서만 씀) -----------
+// 작은 헬퍼들
 
 static void dirToDelta(Direction d, int& dy, int& dx) {
     dy = 0;
@@ -47,7 +47,7 @@ static Direction reverseDir(Direction d) {
     return DIR_NONE;
 }
 
-// 셀이 "통과 가능"한지 (빈 칸 또는 아이템류)
+// 셀이 "통과 가능"한지
 static bool isPassable(int cell) {
     if (cell == EMPTY)        return true;
     if (cell == GROWTH_ITEM)  return true;
@@ -56,7 +56,7 @@ static bool isPassable(int cell) {
     return false;
 }
 
-// ----------- 생성자 -----------
+// 생성자
 
 Gate::Gate() {
     active = false;
@@ -69,7 +69,7 @@ Gate::Gate() {
     useCount = 0;
 }
 
-// ----------- 가장자리 / 진출 방향 -----------
+// 가장자리 / 진출 방향
 
 bool Gate::isEdge(const Map& map, int y, int x) const {
     if (y == 0)                     return true;
@@ -89,7 +89,7 @@ Direction Gate::edgeExitDir(const Map& map, int y, int x) const {
 }
 
 Direction Gate::interiorExitDir(const Map& map, int y, int x, Direction inDir) const {
-    // 우선순위: 직진 → 시계방향 → 반시계방향 → 반대방향
+    // 우선순위: 직진 -> 시계방향 -> 반시계방향 -> 반대방향
     Direction cands[4];
     cands[0] = inDir;
     cands[1] = rotateCW(inDir);
@@ -108,10 +108,10 @@ Direction Gate::interiorExitDir(const Map& map, int y, int x, Direction inDir) c
     return DIR_NONE;
 }
 
-// ----------- Gate 한 쌍 출현 / 제거 -----------
+// Gate 한 쌍 출현 / 제거
 
 bool Gate::spawnPair(Map& map, const Snake& /*snake*/) {
-    // (1) 후보 wall 셀 수집: 일반 WALL이면서 진출 가능한 방향이 하나 이상 있는 자리
+    // 후보 wall 셀 수집: 일반 WALL이면서 진출 가능한 방향이 하나 이상 있는 자리
     std::vector<Position> cands;
     int H = map.getHeight();
     int W = map.getWidth();
@@ -128,7 +128,7 @@ bool Gate::spawnPair(Map& map, const Snake& /*snake*/) {
                 dirToDelta(d, dy, dx);
                 ok = isPassable(map.getCell(y + dy, x + dx));
             } else {
-                // 내부 island wall: 4방향 중 하나라도 통과 가능하면 OK
+                // 내부 island wall: 4방향 중 하나라도 통과 가능하면 됨
                 int dy[4] = {-1, 1, 0, 0};
                 int dx[4] = {0, 0, -1, 1};
                 for (int k = 0; k < 4; k++) {
@@ -148,7 +148,7 @@ bool Gate::spawnPair(Map& map, const Snake& /*snake*/) {
 
     if ((int)cands.size() < 2) return false;
 
-    // (2) 두 자리 무작위 선택. 같으면 다시 뽑기 (최대 50회)
+    // 두 자리 무작위 선택. 같으면 다시 뽑기 - 최대 50회
     int i1 = rand() % (int)cands.size();
     int i2 = rand() % (int)cands.size();
     int tries = 0;
@@ -158,7 +158,7 @@ bool Gate::spawnPair(Map& map, const Snake& /*snake*/) {
     }
     if (i1 == i2) return false;
 
-    // (3) 맵에 표시
+    // 맵에 표시
     pos[0] = cands[i1];
     pos[1] = cands[i2];
     map.setCell(pos[0].y, pos[0].x, GATE);
@@ -170,8 +170,7 @@ bool Gate::spawnPair(Map& map, const Snake& /*snake*/) {
 
 void Gate::clearPair(Map& map) {
     if (active == false) return;
-    // (3) 워프 흔적: GATE 셀을 일반 WALL 이 아니라 USED_GATE_WALL 로 복원
-    // → 다음 spawnPair 후보 검사(== WALL)에서 자동 제외되어 같은 자리에 Gate 가 다시 안 생김
+    // 워프 흔적: GATE 셀을 일반 벽이 아니라 USED_GATE_WALL 로 복원 다음 spawnPair 후보 검사(== WALL)에서 자동 제외되어 같은 자리에 Gate 가 다시 안 생김
     if (map.getCell(pos[0].y, pos[0].x) == GATE) {
         map.setCell(pos[0].y, pos[0].x, USED_GATE_WALL);
     }
@@ -182,7 +181,7 @@ void Gate::clearPair(Map& map) {
     waitTimer = GATE_RESPAWN_WAIT; // 다음 한 쌍이 다른 자리에 뜨기까지의 대기
 }
 
-// ----------- 매 tick 업데이트 -----------
+// 매 tick 업데이트
 
 void Gate::update(Map& map, const Snake& snake) {
     if (active == false) {
@@ -200,14 +199,14 @@ void Gate::update(Map& map, const Snake& snake) {
         return;
     }
 
-    // active 상태: 수명 차감 (Snake 가 통과하지 않아도 결국 자연 만료)
+    // active 상태: 수명 차감 - Snake 가 통과하지 않아도 결국 자연 만료
     aliveTimer--;
     if (aliveTimer <= 0) {
         clearPair(map); // 내부에서 waitTimer 도 같이 리셋
     }
 }
 
-// ----------- 텔레포트 시도 -----------
+// 텔레포트 시도
 
 bool Gate::tryTeleport(int newY, int newX, Direction inDir, Map& map,
                        int& outY, int& outX, Direction& outDir) {
@@ -231,7 +230,7 @@ bool Gate::tryTeleport(int newY, int newX, Direction inDir, Map& map,
         d = interiorExitDir(map, oy, ox, inDir);
     }
     if (d == DIR_NONE) {
-        // 출구가 모두 막혀 있으면 통과 불가 → 게임오버 처리
+        // 출구가 모두 막혀 있으면 통과 불가 -> 게임오버 처리
         return false;
     }
 
@@ -244,8 +243,8 @@ bool Gate::tryTeleport(int newY, int newX, Direction inDir, Map& map,
     inUse[idx] = true;
     useCount++;
 
-    // (3) 워프 흔적: Snake 가 한 번 통과한 즉시 두 자리 모두 USED_GATE_WALL 로 바꿈
-    // 동시에 다음 쌍 출현 대기 타이머도 자동으로 시작 (clearPair 내부 처리)
+    // 워프 흔적: Snake 가 한 번 통과한 즉시 두 자리 모두 USED_GATE_WALL 로 바꿈
+    // 동시에 다음 쌍 출현 대기 타이머도 자동으로 시작
     clearPair(map);
     return true;
 }

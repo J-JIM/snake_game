@@ -3,9 +3,6 @@
 snake
 *.exe
 
-# Claude Code 내부 파일 (혹시나 생성될 수 있으니)
-.claude/
-
 # Mac 시스템 파일
 .DS_Store
 

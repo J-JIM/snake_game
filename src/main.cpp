@@ -28,17 +28,17 @@ int main()
     // 무작위 난수 생성을 위한 시드값 초기화
     srand(time(NULL));
 
-    // ===== 1) ncurses 초기화 =====
+    // ncurses 초기화 
     initscr();             // ncurses 모드 시작
     start_color();         // 색상 사용 선언
     
-    // 💡 인트로 화면이 처음 켜질 때도 색상이 예쁘게 출력되도록 색상 페어 사전 초기화!
+    // 인트로 화면이 처음 켜질 때도 색상이 예쁘게 출력되도록 색상 페어 사전 초기화
     Map().initColors();
 
     keypad(stdscr, TRUE);  // 화살표 키 입력 받기
     noecho();              // 입력한 키를 화면에 보여주지 않음
     curs_set(0);           // 커서 안 보이게
-    nodelay(stdscr, TRUE); // getch()가 키 없으면 기다리지 않게 (tick 진행용)
+    nodelay(stdscr, TRUE); // getch()가 키 없으면 기다리지 않게
 
     // 스테이지 리스트 준비
     std::vector<std::string> stageFiles = {
@@ -52,7 +52,7 @@ int main()
     RankingManager rankingManager;
     rankingManager.loadFromFile();
 
-    // ===== 게임 전체 메인 루프 (Intro <-> Play 반복) =====
+    // 게임 전체 메인 루프
     while (true)
     {
         // (a) 인트로 화면 출력 (시작 키 'A'가 눌리면 true, 'Q'가 눌리면 false)
@@ -67,7 +67,8 @@ int main()
         // 최종 클리어 시 상위 랭킹에 기록할 5단계 최종 데이터 저장용 변수
         int finalMax = 0, finalGrowth = 0, finalPoison = 0, finalSpeed = 0, finalGate = 0;
 
-        // (b) 스테이지 루프 (순차적 스테이지 진행)
+        // (b) 스테이지 루프 
+        // 순차적 스테이지 진행
         while (currentStageIdx < (int)stageFiles.size())
         {
             GameController game(currentStageIdx + 1, stageFiles[currentStageIdx]);

@@ -1,23 +1,23 @@
 // BlockWall.cpp
-// 테트리스 블록 모양 벽 - 예고 → 출현 → 소멸 → 재출현
+// 테트리스 블록 모양 벽 -> 예고 -> 출현 -> 소멸 -> 재출현
 
 #include "BlockWall.h"
 #include "Map.h"
 #include "Snake.h"
 #include <cstdlib>
 
-// 동작 파라미터 (TICK = 200ms 기준)
+// 동작 파라미터
 static const int FIRST_WAIT     = 40;  // 게임 시작 후 첫 블록까지
-static const int WARN_DURATION  = 5;   // 예고 표시 시간 (5 tick = 약 1초)
-static const int ALIVE_DURATION = 60;  // 블록 벽이 유지되는 시간 (약 12초)
-static const int RESPAWN_WAIT   = 25;  // 사라진 뒤 다음 블록까지 (약 5초)
+static const int WARN_DURATION  = 5;   // 예고 표시 시간 - 약 1초
+static const int ALIVE_DURATION = 60;  // 블록 벽이 유지되는 시간 - 12초
+static const int RESPAWN_WAIT   = 25;  // 사라진 뒤 다음 블록까지 - 5초
 
-// 머리에서 이 거리(맨해튼) 안에는 블록을 안 띄움 (갑툭튀 방지)
+// 머리에서 이 거리안에는 블록을 안 띄움
 static const int SAFE_DIST = 4;
 
-// ----------- 테트리스 도형 정의 -----------
+// 테트리스 도형 정의 
 // 각 도형은 기준점 (0,0) 에서의 상대좌표 (dy, dx) 목록
-// 한 도형은 최대 5칸 (BlockWall::MAX_CELLS 와 같은 값)
+// 한 도형은 최대 5칸
 static const int SHAPE_MAX = 5;
 struct Shape {
     int count;
@@ -27,15 +27,15 @@ struct Shape {
 
 static const int SHAPE_COUNT = 6;
 static const Shape SHAPES[SHAPE_COUNT] = {
-    { 4, {0, 0, 0, 0}, {0, 1, 2, 3} },        // I (가로 막대)
-    { 4, {0, 0, 1, 1}, {0, 1, 0, 1} },        // O (정사각형)
+    { 4, {0, 0, 0, 0}, {0, 1, 2, 3} },        // I
+    { 4, {0, 0, 1, 1}, {0, 1, 0, 1} },        // O
     { 4, {0, 1, 1, 1}, {1, 0, 1, 2} },        // T
     { 4, {0, 1, 2, 2}, {0, 0, 0, 1} },        // L
     { 4, {0, 1, 2, 2}, {1, 1, 1, 0} },        // J
     { 5, {0, 0, 0, 1, 2}, {0, 1, 2, 2, 2} },  // ㄱ
 };
 
-// ----------- 생성자 -----------
+// 생성자
 
 BlockWall::BlockWall() {
     phase = 0;             // 대기부터 시작
@@ -47,13 +47,13 @@ BlockWall::BlockWall() {
     }
 }
 
-// ----------- 예고 배치 -----------
+// 예고 배치
 
 bool BlockWall::trySpawnWarn(Map& map, const Snake& /*snake*/) {
     int H = map.getHeight();
     int W = map.getWidth();
 
-    // 뱀 머리 위치 찾기 (맵에서 SNAKE_HEAD 검색)
+    // 뱀 머리 위치 찾기
     int headY = -1;
     int headX = -1;
     for (int y = 0; y < H; y++) {
@@ -69,7 +69,7 @@ bool BlockWall::trySpawnWarn(Map& map, const Snake& /*snake*/) {
     for (int attempt = 0; attempt < 40; attempt++) {
         const Shape& sh = SHAPES[rand() % SHAPE_COUNT];
 
-        // 도형이 차지하는 최대 크기 (bounding box)
+        // 도형이 차지하는 최대 크기
         int maxDy = 0;
         int maxDx = 0;
         for (int i = 0; i < sh.count; i++) {
@@ -78,7 +78,7 @@ bool BlockWall::trySpawnWarn(Map& map, const Snake& /*snake*/) {
         }
 
         // 가장자리 벽(0행/열, H-1/W-1)을 피해 안쪽에만 배치
-        int rangeY = H - 2 - maxDy;  // [1 .. H-2-maxDy]
+        int rangeY = H - 2 - maxDy; 
         int rangeX = W - 2 - maxDx;
         if (rangeY < 1 || rangeX < 1) continue;
         int oy = 1 + rand() % rangeY;
@@ -103,7 +103,7 @@ bool BlockWall::trySpawnWarn(Map& map, const Snake& /*snake*/) {
         }
         if (ok == false) continue;
 
-        // 배치 — 예고(BLOCK_WARN) 로 표시
+        // 배치 — 예고로 표시
         cellCount = sh.count;
         for (int i = 0; i < sh.count; i++) {
             cells[i].y = oy + sh.dy[i];
@@ -115,11 +115,11 @@ bool BlockWall::trySpawnWarn(Map& map, const Snake& /*snake*/) {
     return false;
 }
 
-// ----------- 예고를 실제 벽으로 굳히기 -----------
+// 예고를 실제 벽으로 굳히기
 
 void BlockWall::hardenToWall(Map& map) {
     // 아직 BLOCK_WARN 인 칸만 굳힘
-    // (예고 동안 뱀이 지나가 덮은 칸은 BLOCK_WARN 이 아니므로 자동 스킵 → 공정)
+    // 예고 동안 뱀이 지나가 덮은 칸은 BLOCK_WARN 이 아니므로 자동 스킵
     for (int i = 0; i < cellCount; i++) {
         if (map.getCell(cells[i].y, cells[i].x) == BLOCK_WARN) {
             map.setCell(cells[i].y, cells[i].x, BLOCK_WALL);
@@ -127,10 +127,10 @@ void BlockWall::hardenToWall(Map& map) {
     }
 }
 
-// ----------- 블록 칸 제거 -----------
+// 블록 칸 제거
 
 void BlockWall::clearCells(Map& map, int onlyIfCell) {
-    // 지정한 셀 값인 칸만 EMPTY 로 (뱀/아이템이 덮은 칸은 건드리지 않음)
+    // 지정한 셀 값인 칸만 EMPTY로 뱀/아이템이 덮은 칸은 건드리지 않음
     for (int i = 0; i < cellCount; i++) {
         if (map.getCell(cells[i].y, cells[i].x) == onlyIfCell) {
             map.setCell(cells[i].y, cells[i].x, EMPTY);
@@ -138,14 +138,14 @@ void BlockWall::clearCells(Map& map, int onlyIfCell) {
     }
 }
 
-// ----------- 매 tick 업데이트 -----------
+// 매 tick 업데이트
 
 void BlockWall::update(Map& map, const Snake& snake) {
     timer--;
     if (timer > 0) return;
 
     if (phase == 0) {
-        // 대기 끝 → 예고 배치 시도
+        // 대기 끝 -> 예고 배치 시도
         if (trySpawnWarn(map, snake)) {
             phase = 1;
             timer = WARN_DURATION;
@@ -153,12 +153,12 @@ void BlockWall::update(Map& map, const Snake& snake) {
             timer = 10; // 자리를 못 찾았으면 잠깐 뒤 재시도
         }
     } else if (phase == 1) {
-        // 예고 끝 → 실제 벽으로 굳힘
+        // 예고 끝 -> 실제 벽으로 굳힘
         hardenToWall(map);
         phase = 2;
         timer = ALIVE_DURATION;
     } else {
-        // 출현 끝 → 블록 제거 후 다시 대기
+        // 출현 끝 ->  블록 제거 후 다시 대기
         clearCells(map, BLOCK_WALL);
         phase = 0;
         timer = RESPAWN_WAIT;

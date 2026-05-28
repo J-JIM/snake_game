@@ -3,7 +3,7 @@
 // - 시작 후 일정 시간이 지나면 한 쌍이 출현
 // - 한 쌍은 일정 시간이 지나면 다른 위치로 이동
 // - Snake 머리가 Gate 칸에 도착하면 다른 Gate로 텔레포트
-// (참고) (3) 추가 동작은 별도 MovingWall 클래스에서 담당
+// 추가 동작은 별도 MovingWall 클래스에서 담당
 
 #ifndef GATE_H
 #define GATE_H
@@ -18,12 +18,13 @@ class Gate
 public:
     Gate();
 
-    // 매 tick 한 번 호출. 출현/수명/Wall 무작위 삭제 처리
+    // 매 tick 한 번 호출.
+    // 출현/수명/Wall 무작위 삭제 처리
     void update(Map &map, const Snake &snake);
 
     // 머리가 다음 칸 (newY, newX) = GATE 셀에 진입하려 할 때 호출
     // 진입 가능하면 텔레포트 후 새 머리 좌표/방향을 out 매개변수로 돌려주고 true
-    // 막혀 있으면(진출 가능한 방향이 하나도 없음) false
+    // 막혀 있으면 false
     bool tryTeleport(int newY, int newX, Direction inDir, Map &map,
                      int &outY, int &outX, Direction &outDir);
 
@@ -35,13 +36,14 @@ public:
 
 private:
     bool active;     // 한 쌍이 맵에 떠 있는가
-    int waitTimer;   // 다음 출현까지 남은 tick (active=false 일 때만 사용)
-    int aliveTimer;  // 현재 쌍의 남은 수명 (active=true 일 때 사용)
+    int waitTimer;   // 다음 출현까지 남은 tick, active=false 일 때만 사용
+    int aliveTimer;  // 현재 쌍의 남은 수명, active=true 일 때 사용
     Position pos[2]; // Gate 두 개 위치
-    bool inUse[2];   // 진입 중 플래그 (사라짐/이동 방지)
+    bool inUse[2];   // 진입 중 플래그, 사라짐/이동 방지
     int useCount;    // 통과 횟수 누적
 
-    // 새 한 쌍을 맵에 배치. 자리 못 잡으면 false
+    // 새 한 쌍을 맵에 배치. 
+    // 자리 못 잡으면 false
     bool spawnPair(Map &map, const Snake &snake);
 
     // 현재 쌍을 맵에서 지우고 active=false 로
@@ -50,11 +52,12 @@ private:
     // 가장자리 wall 인지 검사
     bool isEdge(const Map &map, int y, int x) const;
 
-    // 가장자리 Gate 의 진출 방향(맵 안쪽으로 고정)
+    // 가장자리 Gate 의 진출 방향
+    // 맵 안쪽으로 고정
     Direction edgeExitDir(const Map &map, int y, int x) const;
 
     // 내부(island) Gate 의 진출 방향. 우선순위:
-    //  1) 진입 방향과 일치(직진)
+    //  1) 진입 방향과 일치 직진
     //  2) 시계방향 회전
     //  3) 반시계방향 회전
     //  4) 반대방향

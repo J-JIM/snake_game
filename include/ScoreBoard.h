@@ -9,7 +9,7 @@
 class ScoreBoard
 {
 public:
-    // 5단계 - stageNum: 현재 스테이지 번호 (난이도 조절용)
+    // 5단계 - stageNum: 현재 스테이지 번호
     // 5단계 - totalInternalWalls: Used Gate Wall 미션 상한선 계산용
     ScoreBoard(int stageNum, int totalInternalWalls);
 
