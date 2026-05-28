@@ -7,7 +7,7 @@
 #include "common.h"
 
 class Map;   // 전방 선언
-class Gate;  // 전방 선언 (4단계)
+class Gate;  // 전방 선언 
 
 class Snake {
 public:

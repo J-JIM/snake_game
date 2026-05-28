@@ -1,5 +1,5 @@
 // BlockWall.h
-// 4단계 (3) 추가 동작: 테트리스 블록 모양 벽
+// 4단계 추가 동작: 테트리스 블록 모양 벽
 // - 맵 안쪽에 테트리스 도형 한 개가 무작위 위치/모양으로 나타남
 // - 나타나기 1초 전에는 예고(BLOCK_WARN) 표시 → 통과 가능
 // - 예고가 끝나면 진짜 벽(BLOCK_WALL)으로 굳음 → 충돌하면 게임오버
@@ -17,7 +17,8 @@ class BlockWall {
 public:
     BlockWall();
 
-    // 매 tick 호출. 예고 → 출현 → 소멸 → 재출현 흐름을 관리
+    // 매 tick 호출.
+    // 예고 -> 출현 -> 소멸 -> 재출현 흐름을 관리
     void update(Map& map, const Snake& snake);
 
 private:

@@ -1,7 +1,7 @@
 // Item.cpp
 // Item 클래스 구현 - 아이템의 출현/수명/획득 처리
-//   Growth 와 Poison 은 동작이 같아 update() 를 공용으로 쓰고,
-//   Speed 는 속도 효과 때문에 prepareSpeed()/updateSpeed() 를 따로 둔다.
+// Growth 와 Poison 은 동작이 같아 update() 를 공용으로 쓰고,
+// Speed 는 속도 효과 때문에 prepareSpeed()/updateSpeed() 를 따로 둔다.
 
 #include "Item.h"
 #include "Map.h"
@@ -39,7 +39,7 @@ void Item::spawn(Map &map)
     if (empties.empty())
         return;
 
-    // EMPTY 칸 중 하나를 무작위 선택 (% size 로 범위 밖 접근 방지)
+    // EMPTY 칸 중 하나를 무작위 선택 - % size 로 범위 밖 접근 방지
     int idx = rand() % (int)empties.size();
     y = empties[idx].y;
     x = empties[idx].x;

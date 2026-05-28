@@ -1,3 +1,8 @@
+// RankingManager.h
+// 랭킹(최고 점수) 기록을 관리하는 클래스.
+// 플레이 결과를 RankingRecord 로 저장하고 rankings.txt 에 영속화하며,
+// 스테이지별 상위 랭킹 조회와 방금 플레이한 기록 하이라이트를 제공한다.
+
 #ifndef RANKINGMANAGER_H
 #define RANKINGMANAGER_H
 
@@ -13,7 +18,7 @@ struct RankingRecord {
     int speedCount;
     int gateCount;
     bool isCurrentPlay = false;
-    int rank = 0; // 랭킹 정렬 후 계산된 순위 (1-indexed)
+    int rank = 0; // 랭킹 정렬 후 계산된 순위
 };
 
 class RankingManager {
@@ -27,11 +32,12 @@ public:
     // 파일에 랭킹 저장
     void saveToFile(const std::string& filepath = "scoreboard/rankings.txt");
 
-    // 새로운 랭킹 레코드 추가 (추가 시 현재 시간 구해서 timestamp 자동 생성)
+    // 새로운 랭킹 레코드 추가 
+    // 추가 시 현재 시간 구해서 timestamp 자동 생성
     void addRecord(int stage, int maxLength, int growth, int poison, int speed, int gate);
 
-    // 특정 스테이지(1~5, 0 = 통합)의 랭킹 리스트 반환
-    // 최대 길이 내림차순 정렬 후 상위 10등 + (방금 플레이한 기록이 10등 밖일 시 추가) 반환
+    // 특정 스테이지의 랭킹 리스트 반환
+    // 최대 길이 내림차순 정렬 후 상위 10등 + 방금 플레이한 기록이 10등 밖일 시 추가 반환
     std::vector<RankingRecord> getRankings(int stageFilter) const;
 
     // 방금 플레이한 기록 표시 설정
