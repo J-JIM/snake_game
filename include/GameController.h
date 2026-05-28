@@ -8,6 +8,7 @@
 #include "ScoreBoard.h"
 #include "Gate.h"
 #include "Item.h"
+#include "BlockWall.h"
 #include "RankingManager.h"
 
 enum class GameResult {
@@ -70,6 +71,7 @@ private:
     Item growthItem;
     Item poisonItem;
     Item speedItem;
+    BlockWall blockWall;
 
     bool isRunning;
     bool gameOver;

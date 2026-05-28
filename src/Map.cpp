@@ -107,13 +107,16 @@ void Map::initColors() const
   init_pair(GATE, COLOR_MAGENTA, COLOR_MAGENTA);
   init_pair(SPEED_ITEM, COLOR_CYAN, COLOR_CYAN);
   init_pair(USED_GATE_WALL, COLOR_YELLOW, COLOR_YELLOW);
-
   // 스코어보드 및 각종 메뉴 텍스트 출력용 (글자 가독성을 위해 배경을 검정색으로 지정)
   init_pair(COLOR_PAIR_TEXT_GROWTH, COLOR_GREEN, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_POISON, COLOR_RED, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_SPEED, COLOR_CYAN, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_GATE, COLOR_MAGENTA, COLOR_BLACK);
   init_pair(COLOR_PAIR_TEXT_USED_GATE, COLOR_YELLOW, COLOR_BLACK);
+
+  // 테트리스 블록 벽 - 굳은 벽은 회색, 출현 1초 전 예고는 빨강
+  init_pair(BLOCK_WALL, COLOR_WHITE, COLOR_WHITE);
+  init_pair(BLOCK_WARN, COLOR_RED, COLOR_RED);
 }
 
 // 맵 전체를 화면에 그리기
