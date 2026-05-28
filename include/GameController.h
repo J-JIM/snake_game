@@ -2,13 +2,11 @@
 #define GAMECONTROLLER_H
 
 #include <string>
-#include <vector>
 #include "Map.h"
 #include "Snake.h"
 #include "ScoreBoard.h"
 #include "Gate.h"
 #include "Item.h"
-#include "RankingManager.h"
 
 enum class GameResult {
     STAGE_CLEAR,
@@ -26,25 +24,6 @@ public:
 
     // 단일 스테이지 실행 루프
     GameResult run();
-
-    // 인트로 화면 표시
-    static bool showIntroScreen(RankingManager& rankingManager);
-
-    // 도움말/조작법 화면 표시
-    static void showHelpScreen();
-
-    // 랭킹 보드 화면 표시 (A 또는 Q 입력에 따라 true/false 반환)
-    static bool showRankingBoardScreen(RankingManager& rankingManager, int initialStage, const std::string& bottomMessage, bool allowSwitch);
-
-    // 랭킹 테이블 그리기 헬퍼 함수
-    static void drawRankingTable(const std::vector<RankingRecord>& ranks, int stageFilter, const std::string& bottomMessage);
-
-    // 스테이지 결과 스크린 출력 (랭킹 보드 연동, A는 true, Q는 false 반환)
-    bool showStageClearScreen(RankingManager& rankingManager) const;
-    bool showGameOverScreen(RankingManager& rankingManager) const;
-    
-    // 최종 성공 스크린 (모든 스테이지 통과, 랭킹 보드 연동, A는 true, Q는 false 반환)
-    static bool showTotalClearScreen(RankingManager& rankingManager, int maxLength, int growth, int poison, int speed, int gate);
 
     // 점수 조회 게터 (최종 랭킹 기록용)
     int getMaxLength() const { return scoreBoard.getMaxLength(); }
@@ -67,9 +46,40 @@ private:
     Snake snake;
     ScoreBoard scoreBoard;
     Gate gate;
-    Item growthItem;
-    Item poisonItem;
-    Item speedItem;
+
+    // 💡 동료분 코드를 100% 보존하면서 결합도를 낮추기 위한 아키텍처적 Item 어댑터 정의!
+    class ItemAdapter {
+    public:
+        ItemAdapter() : growthItem{0,0,false,0,0,0,false},
+                        poisonItem{0,0,false,0,0,0,false},
+                        speedItem{0,0,false,0,0,0,false} {}
+
+        // 뱀 이동 전, 속도 상태 스냅샷 저장
+        void prepare(Map& map) {
+            prepareSpeedItem(map, speedItem, SPEED_ITEM);
+        }
+
+        // 이동 완료 후 아이템 갱신 및 스폰 주기 관리
+        void update(Map& map, int target) {
+            bool shouldUpdate = updateSpeedItem(map, speedItem, SPEED_ITEM);
+            if (shouldUpdate) {
+                updateItem(map, growthItem, GROWTH_ITEM);
+                updateItem(map, poisonItem, POISON_ITEM);
+            }
+        }
+
+        // 속도 아이템 효과가 활성 상태인지 확인
+        bool isSpeedActive() const {
+            return ::isSpeedActive(speedItem);
+        }
+
+    private:
+        Item growthItem;
+        Item poisonItem;
+        Item speedItem;
+    };
+
+    ItemAdapter items;
 
     bool isRunning;
     bool gameOver;
