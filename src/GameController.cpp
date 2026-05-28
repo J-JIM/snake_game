@@ -110,15 +110,16 @@ void GameController::update() {
         clear();
         
         // 상단 헤더: 작은 로고 및 스테이지 정보 표시 (No emojis)
+        int totalWidth = map.getWidth() * CELL_WIDTH + 4 + 28;
+
         attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
         mvprintw(0, 2, "SNAKE GAME");
         attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
         
         attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-        mvprintw(0, 22, "[ STAGE %d ]", stageNum);
+        mvprintw(0, totalWidth - 13, "[ STAGE %d ]", stageNum);
         attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
         
-        int totalWidth = map.getWidth() * CELL_WIDTH + 4 + 28;
         for (int x = 0; x < totalWidth; x++) {
             mvprintw(1, x, "═");
         }
@@ -171,15 +172,16 @@ void GameController::render() const {
     clear();
 
     // 상단 헤더: 작은 로고 및 스테이지 정보 표시 (No emojis)
+    int totalWidth = map.getWidth() * CELL_WIDTH + 4 + 28;
+
     attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
     mvprintw(0, 2, "SNAKE GAME");
     attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
     
     attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-    mvprintw(0, 22, "[ STAGE %d ]", stageNum);
+    mvprintw(0, totalWidth - 13, "[ STAGE %d ]", stageNum);
     attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
     
-    int totalWidth = map.getWidth() * CELL_WIDTH + 4 + 28;
     for (int x = 0; x < totalWidth; x++) {
         mvprintw(1, x, "═");
     }
@@ -225,10 +227,10 @@ bool GameController::showIntroScreen(RankingManager& rankingManager) {
             mvprintw(boxY + 2, boxX, "╠══════════════════════════════════════════════════════════╣");
             attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
             
-            mvprintw(boxY + 3, boxX, "║  [ A ] 키를 눌러 게임 시작 (Start Game)                  ║");
-            mvprintw(boxY + 4, boxX, "║  [ B ] 키를 눌러 랭킹 확인 (Ranking Board)               ║");
-            mvprintw(boxY + 5, boxX, "║  [ ? ] 키를 눌러 도움말 및 조작법 (Help & Controls)      ║");
-            mvprintw(boxY + 6, boxX, "║  [ Q ] 키를 눌러 게임 종료 (Exit)                        ║");
+            mvprintw(boxY + 3, boxX, "║  [ A ] 키를 눌러 게임 시작                              ║");
+            mvprintw(boxY + 4, boxX, "║  [ B ] 키를 눌러 랭킹 확인                              ║");
+            mvprintw(boxY + 5, boxX, "║  [ ? ] 키를 눌러 도움말 및 조작법                        ║");
+            mvprintw(boxY + 6, boxX, "║  [ Q ] 키를 눌러 게임 종료                              ║");
             mvprintw(boxY + 7, boxX, "╚══════════════════════════════════════════════════════════╝");
 
             attron(A_DIM);
@@ -252,7 +254,7 @@ bool GameController::showIntroScreen(RankingManager& rankingManager) {
             return false;
         }
         else if (key == 'b' || key == 'B') {
-            showRankingBoardScreen(rankingManager, 0, "[◀ / ▶] 방향키를 입력해 다른 스테이지의 랭킹을 확인할 수 있습니다. (돌아가기: [ A ])", true);
+            showRankingBoardScreen(rankingManager, 0, "[<- / ->] 방향키를 입력해 다른 스테이지의 랭킹을 확인할 수 있습니다. (돌아가기: [ A ])", true);
             needRedraw = true;
         }
         else if (key == '?' || key == 'h' || key == 'H') {
@@ -281,12 +283,12 @@ void GameController::showHelpScreen() {
     mvprintw(startY + 2, startX, "╠════════════════════════════════════════════════════════════════════╣");
     attroff(COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE) | A_BOLD);
 
-    mvprintw(startY + 3, startX, "║  - 조작법 (Movement & Controls)                                    ║");
+    mvprintw(startY + 3, startX, "║  - 조작법                                                          ║");
     mvprintw(startY + 4, startX, "║    - 방향키 [ ↑ | ↓ | ← | → ] : 뱀 이동 방향 전환                  ║");
     mvprintw(startY + 5, startX, "║    - [ Q ] 키 : 게임 중 강제 종료 및 이전 화면 이동                ║");
     mvprintw(startY + 6, startX, "║                                                                    ║");
     
-    mvprintw(startY + 7, startX, "║  - 게임 아이템 종류 (Game Items)                                   ║");
+    mvprintw(startY + 7, startX, "║  - 게임 아이템 종류                                                ║");
     
     // Growth Item
     mvprintw(startY + 8, startX, "║    - ");
@@ -339,9 +341,9 @@ void GameController::showHelpScreen() {
     mvprintw(startY + 12, startX + 69, "║");
 
     mvprintw(startY + 13, startX, "║                                                                    ║");
-    mvprintw(startY + 14, startX, "║  - 게임 규칙 및 실패 조건 (Game Rules & Game Over)                  ║");
-    mvprintw(startY + 15, startX, "║    - 각 스테이지별 우측 미션(Missions) 목표를 전부 완수 시 클리어   ║");
-    mvprintw(startY + 16, startX, "║    - 뱀의 머리가 벽(Wall, Immune Wall, Used Wall)에 충돌 시 실패   ║");
+    mvprintw(startY + 14, startX, "║  - 게임 규칙 및 실패 조건                                          ║");
+    mvprintw(startY + 15, startX, "║    - 각 스테이지별 우측 미션 목표를 전부 완수 시 클리어             ║");
+    mvprintw(startY + 16, startX, "║    - 뱀의 머리가 벽에 충돌 시 실패                                 ║");
     mvprintw(startY + 17, startX, "║    - 독약을 먹고 뱀의 몸통 길이가 3 미만이 될 시 실패 (게임 오버)  ║");
     mvprintw(startY + 18, startX, "║    - 맵 내 남은 벽이 부족해져 게이트 미션 달성이 불가할 시 실패    ║");
     mvprintw(startY + 19, startX, "╚════════════════════════════════════════════════════════════════════╝");
@@ -441,7 +443,7 @@ void GameController::drawRankingTable(const std::vector<RankingRecord>& ranks, i
             if (r.isCurrentPlay) {
                 attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
                 if (r.rank <= 10) {
-                    mvprintw(rowY, startX, "║▶%2d위│  %d단계 │    %2d    │   %2d   │   %2d   │  %2d   │    %2d    │  %s  ║",
+                    mvprintw(rowY, startX, "║->%2d위│  %d단계 │    %2d    │   %2d   │   %2d   │  %2d   │    %2d    │  %s  ║",
                              r.rank, r.stage, r.maxLength, r.growthCount, r.poisonCount, r.speedCount, r.gateCount, r.timestamp.c_str());
                 } else {
                     mvprintw(rowY, startX, "║내기록│  %d단계 │    %2d    │   %2d   │   %2d   │  %2d   │    %2d    │  %s  ║",
@@ -489,7 +491,7 @@ bool GameController::showGameOverScreen(RankingManager& rankingManager) const {
     rankingManager.markLatestAsCurrent();
     rankingManager.saveToFile();
 
-    bool playAgain = showRankingBoardScreen(rankingManager, stageNum, "GAME OVER! [ A ] 처음부터 재시작 | [ Q ] 종료 | [◀ / ▶] 다른 랭킹", true);
+    bool playAgain = showRankingBoardScreen(rankingManager, stageNum, "GAME OVER! [ A ] 처음부터 재시작 | [ Q ] 종료 | [<- / ->] 다른 랭킹", true);
     rankingManager.clearCurrentPlayFlag();
     return playAgain;
 }
@@ -499,7 +501,7 @@ bool GameController::showStageClearScreen(RankingManager& rankingManager) const 
     rankingManager.markLatestAsCurrent();
     rankingManager.saveToFile();
 
-    bool keepGoing = showRankingBoardScreen(rankingManager, stageNum, "STAGE CLEAR! [ A ] 다음 단계 계속 | [ Q ] 종료 | [◀ / ▶] 다른 랭킹", true);
+    bool keepGoing = showRankingBoardScreen(rankingManager, stageNum, "STAGE CLEAR! [ A ] 다음 단계 계속 | [ Q ] 종료 | [<- / ->] 다른 랭킹", true);
     rankingManager.clearCurrentPlayFlag();
     return keepGoing;
 }
@@ -509,7 +511,7 @@ bool GameController::showTotalClearScreen(RankingManager& rankingManager, int ma
     rankingManager.markLatestAsCurrent();
     rankingManager.saveToFile();
 
-    bool playAgain = showRankingBoardScreen(rankingManager, 0, "ALL STAGES CLEAR! [ A ] 처음부터 재시작 | [ Q ] 종료 | [◀ / ▶] 다른 랭킹", true);
+    bool playAgain = showRankingBoardScreen(rankingManager, 0, "ALL STAGES CLEAR! [ A ] 처음부터 재시작 | [ Q ] 종료 | [<- / ->] 다른 랭킹", true);
     rankingManager.clearCurrentPlayFlag();
     return playAgain;
 }
