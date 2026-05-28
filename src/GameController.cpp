@@ -5,38 +5,50 @@
 static const int TICK_USEC = 200000;
 
 // UTF-8 문자열의 시각적 셀 너비를 구하는 헬퍼 함수 (한글/특수기호 대응)
-static int getUtf8VisualWidth(const std::string& str) {
+static int getUtf8VisualWidth(const std::string &str)
+{
     int width = 0;
-    for (size_t i = 0; i < str.length(); ) {
+    for (size_t i = 0; i < str.length();)
+    {
         unsigned char c = str[i];
-        if (c < 0x80) {
+        if (c < 0x80)
+        {
             width += 1;
             i += 1;
-        } else if ((c & 0xE0) == 0xC0) {
+        }
+        else if ((c & 0xE0) == 0xC0)
+        {
             width += 2;
             i += 2;
-        } else if ((c & 0xF0) == 0xE0) { // 한글 및 ◀, ▶ 등
+        }
+        else if ((c & 0xF0) == 0xE0)
+        { // 한글 및 ◀, ▶ 등
             width += 2;
             i += 3;
-        } else {
+        }
+        else
+        {
             i += 1;
         }
     }
     return width;
 }
 
-GameController::GameController(int stageNum, const std::string& mapFilePath)
+GameController::GameController(int stageNum, const std::string &mapFilePath)
     : stageNum(stageNum), mapFilePath(mapFilePath), scoreBoard(stageNum, 0),
       growthItem(GROWTH_ITEM), poisonItem(POISON_ITEM), speedItem(SPEED_ITEM),
       isRunning(false), gameOver(false), stageClear(false), userQuit(false) {}
 
-bool GameController::initialize() {
-    if (map.loadFromFile(mapFilePath.c_str()) == false) {
+bool GameController::initialize()
+{
+    if (map.loadFromFile(mapFilePath.c_str()) == false)
+    {
         return false;
     }
     map.initColors();
 
-    if (snake.initFromMap(map) == false) {
+    if (snake.initFromMap(map) == false)
+    {
         return false;
     }
 
@@ -48,7 +60,7 @@ bool GameController::initialize() {
     poisonItem.reset();
     speedItem.reset();
     blockWall = BlockWall();
-    
+
     isRunning = true;
     gameOver = false;
     stageClear = false;
@@ -60,69 +72,104 @@ bool GameController::initialize() {
     return true;
 }
 
-GameResult GameController::run() {
-    while (isRunning && !gameOver && !stageClear) {
+GameResult GameController::run()
+{
+    while (isRunning && !gameOver && !stageClear)
+    {
         render();
         waitAndProcessInput();
-        if (userQuit) {
+        if (userQuit)
+        {
             return GameResult::QUIT;
         }
         update();
     }
 
-    if (gameOver) {
+    if (gameOver)
+    {
         return GameResult::GAME_OVER;
     }
     return GameResult::STAGE_CLEAR;
 }
 
-void GameController::waitAndProcessInput() {
+void GameController::waitAndProcessInput()
+{
     int waitTime = speedItem.isSpeedActive() ? TICK_USEC / 2 : TICK_USEC;
     int elapsed = 0;
     const int pollInterval = 10000; // 10ms 단위 폴링
 
-    while (elapsed < waitTime) {
+    while (elapsed < waitTime)
+    {
         int key = getch();
-        if (key != ERR) {
-            if (key == 'q' || key == 'Q') {
+        if (key != ERR)
+        {
+            if (key == 'q' || key == 'Q')
+            {
                 isRunning = false;
                 userQuit = true;
                 break;
             }
-            else if (key == KEY_UP)    snake.requestDirection(DIR_UP);
-            else if (key == KEY_DOWN)  snake.requestDirection(DIR_DOWN);
-            else if (key == KEY_LEFT)  snake.requestDirection(DIR_LEFT);
-            else if (key == KEY_RIGHT) snake.requestDirection(DIR_RIGHT);
+            else if (key == KEY_UP)
+                snake.requestDirection(DIR_UP);
+            else if (key == KEY_DOWN)
+                snake.requestDirection(DIR_DOWN);
+            else if (key == KEY_LEFT)
+                snake.requestDirection(DIR_LEFT);
+            else if (key == KEY_RIGHT)
+                snake.requestDirection(DIR_RIGHT);
         }
         sleep_usec(pollInterval);
         elapsed += pollInterval;
     }
 }
 
-void GameController::update() {
+void GameController::update()
+{
     // 뱀의 이동 직전, 속도 아이템 수명 및 상태 정보의 스냅샷 준비
     speedItem.prepareSpeed(map);
 
     // 미션 가능 여부 실시간 체크
     scoreBoard.setInternalWalls(map.countInternalWalls());
-    if (!scoreBoard.canCompleteGateMission(gate.isActive())) {
+    if (!scoreBoard.canCompleteGateMission(gate.isActive()))
+    {
         gameOver = true;
         clear();
-        
+
         // 상단 헤더: 작은 로고 및 스테이지 정보 표시 (No emojis)
         int totalWidth = map.getWidth() * CELL_WIDTH + 4 + 28;
 
-        attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-        mvprintw(0, 2, "SNAKE GAME");
-        attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-        
+        // 상단 테두리 상자
         attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-        mvprintw(0, totalWidth - 13, "[ STAGE %d ]", stageNum);
-        attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-        
-        for (int x = 0; x < totalWidth; x++) {
-            mvprintw(1, x, "═");
+        mvprintw(0, 0, "╔");
+        for (int x = 1; x < totalWidth - 1; x++)
+        {
+            mvprintw(0, x, "═");
         }
+        mvprintw(0, totalWidth - 1, "╗");
+
+        mvprintw(1, 0, "║");
+        for (int x = 1; x < totalWidth - 1; x++)
+        {
+            mvprintw(1, x, " ");
+        }
+        mvprintw(1, totalWidth - 1, "║");
+
+        mvprintw(2, 0, "╚");
+        for (int x = 1; x < totalWidth - 1; x++)
+        {
+            mvprintw(2, x, "═");
+        }
+        mvprintw(2, totalWidth - 1, "╝");
+        attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
+
+        // 텍스트 출력
+        attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
+        mvprintw(1, 2, "SNAKE GAME");
+        attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
+
+        attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
+        mvprintw(1, totalWidth - 14, "[ STAGE %d ]", stageNum);
+        attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
 
         map.draw(3, 0);
         scoreBoard.draw(3, map.getWidth() * CELL_WIDTH + 4);
@@ -139,13 +186,17 @@ void GameController::update() {
     // 뱀 한 칸 이동 시도
     int target = snake.move(map, &gate);
 
-    if (gate.getUseCount() > prevGateUseCount) {
+    if (gate.getUseCount() > prevGateUseCount)
+    {
         scoreBoard.addGate();
     }
 
-    if (target == -1) {
+    if (target == -1)
+    {
         gameOver = true;
-    } else {
+    }
+    else
+    {
         if (target == GROWTH_ITEM)
             scoreBoard.addGrowth();
         else if (target == POISON_ITEM)
@@ -157,34 +208,57 @@ void GameController::update() {
 
         // 아이템 틱 갱신 및 스폰 진행
         bool shouldUpdate = speedItem.updateSpeed(map);
-        if (shouldUpdate) {
+        if (shouldUpdate)
+        {
             growthItem.update(map);
             poisonItem.update(map);
         }
 
-        if (scoreBoard.isAllMissionComplete()) {
+        if (scoreBoard.isAllMissionComplete())
+        {
             stageClear = true;
         }
     }
 }
 
-void GameController::render() const {
+void GameController::render() const
+{
     clear();
 
-    // 상단 헤더: 작은 로고 및 스테이지 정보 표시 (No emojis)
     int totalWidth = map.getWidth() * CELL_WIDTH + 4 + 28;
 
-    attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-    mvprintw(0, 2, "SNAKE GAME");
-    attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-    
+    // 상단 테두리 상자
     attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-    mvprintw(0, totalWidth - 13, "[ STAGE %d ]", stageNum);
-    attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-    
-    for (int x = 0; x < totalWidth; x++) {
-        mvprintw(1, x, "═");
+    mvprintw(0, 0, "╔");
+    for (int x = 1; x < totalWidth - 1; x++)
+    {
+        mvprintw(0, x, "═");
     }
+    mvprintw(0, totalWidth - 1, "╗");
+
+    mvprintw(1, 0, "║");
+    for (int x = 1; x < totalWidth - 1; x++)
+    {
+        mvprintw(1, x, " ");
+    }
+    mvprintw(1, totalWidth - 1, "║");
+
+    mvprintw(2, 0, "╚");
+    for (int x = 1; x < totalWidth - 1; x++)
+    {
+        mvprintw(2, x, "═");
+    }
+    mvprintw(2, totalWidth - 1, "╝");
+    attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
+
+    // 텍스트 출력
+    attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
+    mvprintw(1, 2, "SNAKE GAME");
+    attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
+
+    attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
+    mvprintw(1, totalWidth - 14, "[ STAGE %d ]", stageNum);
+    attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
 
     // 맵과 스코어보드를 Y=3 위치부터 그리도록 아래로 이동
     map.draw(3, 0);
@@ -196,21 +270,24 @@ void GameController::render() const {
 // 💡 비주얼 다듬기: 인트로, 규칙 설명, 랭킹 연동화면 메서드 구현
 // ==========================================================
 
-bool GameController::showIntroScreen(RankingManager& rankingManager) {
+bool GameController::showIntroScreen(RankingManager &rankingManager)
+{
     nodelay(stdscr, FALSE); // 동기식 키 입력으로 일시 전환
     bool needRedraw = true;
-    while (true) {
-        if (needRedraw) {
+    while (true)
+    {
+        if (needRedraw)
+        {
             clear();
             int H, W;
             getmaxyx(stdscr, H, W);
-            
+
             int startY = (H > 22) ? (H - 22) / 2 : 0;
             int startX = (W > 82) ? (W - 82) / 2 : 0;
 
             // ASCII Art 로고 출력 (녹색 테마)
             attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-            mvprintw(startY, startX,     "  ██████  ███    ██  █████  ██   ██ ███████      ██████   █████  ███    ███ ███████");
+            mvprintw(startY, startX, "  ██████  ███    ██  █████  ██   ██ ███████      ██████   █████  ███    ███ ███████");
             mvprintw(startY + 1, startX, " ██       ████   ██ ██   ██ ██  ██  ██          ██       ██   ██ ████  ████ ██     ");
             mvprintw(startY + 2, startX, "  █████   ██ ██  ██ ███████ █████   █████       ██   ███ ███████ ██ ████ ██ █████  ");
             mvprintw(startY + 3, startX, "      ██  ██  ██ ██ ██   ██ ██  ██  ██          ██    ██ ██   ██ ██  ██  ██ ██     ");
@@ -220,21 +297,21 @@ bool GameController::showIntroScreen(RankingManager& rankingManager) {
             // 메뉴 프레임 상자
             int boxX = startX + 11;
             int boxY = startY + 7;
-            
+
             attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-            mvprintw(boxY, boxX,     "╔══════════════════════════════════════════════════════════╗");
+            mvprintw(boxY, boxX, "╔══════════════════════════════════════════════════════════╗");
             mvprintw(boxY + 1, boxX, "║                     MAIN MENU SELECT                     ║");
             mvprintw(boxY + 2, boxX, "╠══════════════════════════════════════════════════════════╣");
             attroff(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD);
-            
-            mvprintw(boxY + 3, boxX, "║  [ A ] 키를 눌러 게임 시작                              ║");
-            mvprintw(boxY + 4, boxX, "║  [ B ] 키를 눌러 랭킹 확인                              ║");
+
+            mvprintw(boxY + 3, boxX, "║  [ A ] 키를 눌러 게임 시작                               ║");
+            mvprintw(boxY + 4, boxX, "║  [ B ] 키를 눌러 랭킹 확인                               ║");
             mvprintw(boxY + 5, boxX, "║  [ ? ] 키를 눌러 도움말 및 조작법                        ║");
-            mvprintw(boxY + 6, boxX, "║  [ Q ] 키를 눌러 게임 종료                              ║");
+            mvprintw(boxY + 6, boxX, "║  [ Q ] 키를 눌러 게임 종료                               ║");
             mvprintw(boxY + 7, boxX, "╚══════════════════════════════════════════════════════════╝");
 
             attron(A_DIM);
-            mvprintw(boxY + 9, boxX + 6, "© 2026 C++ Snake Game Project - Excellent Aesthetics");
+            mvprintw(boxY + 9, boxX + 6, "2026 C++ Snake Game Project - 1조");
             attroff(A_DIM);
 
             refresh();
@@ -242,43 +319,50 @@ bool GameController::showIntroScreen(RankingManager& rankingManager) {
         }
 
         int key = getch();
-        if (key == ERR) {
+        if (key == ERR)
+        {
             sleep_usec(10000); // 10ms 대기하여 CPU 100% 폭주 방지
             continue;
         }
-        if (key == 'a' || key == 'A') {
+        if (key == 'a' || key == 'A')
+        {
             nodelay(stdscr, TRUE); // 다시 비동기 게임 루프용 폴링으로 원복
             return true;
         }
-        else if (key == 'q' || key == 'Q') {
+        else if (key == 'q' || key == 'Q')
+        {
             return false;
         }
-        else if (key == 'b' || key == 'B') {
-            showRankingBoardScreen(rankingManager, 0, "[<- / ->] 방향키를 입력해 다른 스테이지의 랭킹을 확인할 수 있습니다. (돌아가기: [ A ])", true);
+        else if (key == 'b' || key == 'B')
+        {
+            showRankingBoardScreen(rankingManager, 0, "[← / →] 방향키를 입력해 다른 스테이지의 랭킹을 확인할 수 있습니다. (돌아가기: [ A ])", true);
             needRedraw = true;
         }
-        else if (key == '?' || key == 'h' || key == 'H') {
+        else if (key == '?' || key == 'h' || key == 'H')
+        {
             showHelpScreen();
             needRedraw = true;
         }
-        else if (key == KEY_RESIZE) {
+        else if (key == KEY_RESIZE)
+        {
             needRedraw = true;
         }
     }
 }
 
-void GameController::showHelpScreen() {
+void GameController::showHelpScreen()
+{
     nodelay(stdscr, FALSE);
     clear();
     int H, W;
     getmaxyx(stdscr, H, W);
     (void)H;
-    
+
     int startX = (W > 70) ? (W - 70) / 2 : 0;
     int startY = 1;
 
     attron(COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE) | A_BOLD);
-    mvprintw(startY, startX,     "╔════════════════════════════════════════════════════════════════════╗");
+    mvprintw(startY, startX, "╔════════════════════════════════════════════════════════════════════╗");
     mvprintw(startY + 1, startX, "║                        HELP & GAME CONTROLS                        ║");
     mvprintw(startY + 2, startX, "╠════════════════════════════════════════════════════════════════════╣");
     attroff(COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE) | A_BOLD);
@@ -287,9 +371,9 @@ void GameController::showHelpScreen() {
     mvprintw(startY + 4, startX, "║    - 방향키 [ ↑ | ↓ | ← | → ] : 뱀 이동 방향 전환                  ║");
     mvprintw(startY + 5, startX, "║    - [ Q ] 키 : 게임 중 강제 종료 및 이전 화면 이동                ║");
     mvprintw(startY + 6, startX, "║                                                                    ║");
-    
+
     mvprintw(startY + 7, startX, "║  - 게임 아이템 종류                                                ║");
-    
+
     // Growth Item
     mvprintw(startY + 8, startX, "║    - ");
     attron(COLOR_PAIR(GROWTH_ITEM));
@@ -299,7 +383,7 @@ void GameController::showHelpScreen() {
     printw(" Growth Item (초록색) : 뱀의 몸통 길이 1 증가             ");
     attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH));
     mvprintw(startY + 8, startX + 69, "║");
-    
+
     // Poison Item
     mvprintw(startY + 9, startX, "║    - ");
     attron(COLOR_PAIR(POISON_ITEM));
@@ -342,7 +426,7 @@ void GameController::showHelpScreen() {
 
     mvprintw(startY + 13, startX, "║                                                                    ║");
     mvprintw(startY + 14, startX, "║  - 게임 규칙 및 실패 조건                                          ║");
-    mvprintw(startY + 15, startX, "║    - 각 스테이지별 우측 미션 목표를 전부 완수 시 클리어             ║");
+    mvprintw(startY + 15, startX, "║    - 각 스테이지별 우측 미션 목표를 전부 완수 시 클리어            ║");
     mvprintw(startY + 16, startX, "║    - 뱀의 머리가 벽에 충돌 시 실패                                 ║");
     mvprintw(startY + 17, startX, "║    - 독약을 먹고 뱀의 몸통 길이가 3 미만이 될 시 실패 (게임 오버)  ║");
     mvprintw(startY + 18, startX, "║    - 맵 내 남은 벽이 부족해져 게이트 미션 달성이 불가할 시 실패    ║");
@@ -354,78 +438,97 @@ void GameController::showHelpScreen() {
 
     refresh();
 
-    while (true) {
+    while (true)
+    {
         int key = getch();
-        if (key == ERR) {
+        if (key == ERR)
+        {
             sleep_usec(10000); // 10ms 대기하여 CPU 100% 폭주 방지
             continue;
         }
-        if (key == 'a' || key == 'A') {
+        if (key == 'a' || key == 'A')
+        {
             break;
         }
     }
 }
 
-bool GameController::showRankingBoardScreen(RankingManager& rankingManager, int initialStage, const std::string& bottomMessage, bool allowSwitch) {
+bool GameController::showRankingBoardScreen(RankingManager &rankingManager, int initialStage, const std::string &bottomMessage, bool allowSwitch)
+{
     nodelay(stdscr, FALSE);
     int stageFilter = initialStage; // 0 = 통합 랭킹, 1~5 = 개별 스테이지
     bool needRedraw = true;
 
-    while (true) {
-        if (needRedraw) {
+    while (true)
+    {
+        if (needRedraw)
+        {
             auto ranks = rankingManager.getRankings(stageFilter);
             drawRankingTable(ranks, stageFilter, bottomMessage);
             needRedraw = false;
         }
 
         int key = getch();
-        if (key == ERR) {
+        if (key == ERR)
+        {
             sleep_usec(10000); // 10ms 대기하여 CPU 100% 폭주 방지
             continue;
         }
-        if (key == 'a' || key == 'A') {
+        if (key == 'a' || key == 'A')
+        {
             return true;
         }
-        else if (key == 'q' || key == 'Q') {
+        else if (key == 'q' || key == 'Q')
+        {
             return false;
         }
-        else if (allowSwitch) {
-            if (key == KEY_LEFT) {
+        else if (allowSwitch)
+        {
+            if (key == KEY_LEFT)
+            {
                 stageFilter--;
-                if (stageFilter < 0) stageFilter = 5;
+                if (stageFilter < 0)
+                    stageFilter = 5;
                 needRedraw = true;
             }
-            else if (key == KEY_RIGHT) {
+            else if (key == KEY_RIGHT)
+            {
                 stageFilter++;
-                if (stageFilter > 5) stageFilter = 0;
+                if (stageFilter > 5)
+                    stageFilter = 0;
                 needRedraw = true;
             }
         }
-        else if (key == KEY_RESIZE) {
+        else if (key == KEY_RESIZE)
+        {
             needRedraw = true;
         }
     }
 }
 
-void GameController::drawRankingTable(const std::vector<RankingRecord>& ranks, int stageFilter, const std::string& bottomMessage) {
+void GameController::drawRankingTable(const std::vector<RankingRecord> &ranks, int stageFilter, const std::string &bottomMessage)
+{
     clear();
     int H, W;
     getmaxyx(stdscr, H, W);
     (void)H;
-    
+
     // 표 전체 너비 88칸
     int boxWidth = 88;
     int startX = (W > boxWidth) ? (W - boxWidth) / 2 : 0;
     int startY = 1;
 
     attron(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_SPEED));
-    mvprintw(startY, startX,     "╔══════════════════════════════════════════════════════════════════════════════════════╗");
-    if (stageFilter == 0) {
+    mvprintw(startY, startX, "╔═══════════════════════════════════════════════════════════════════════════════════════╗");
+    if (stageFilter == 0)
+    {
         mvprintw(startY + 1, startX, "║                               ALL STAGES RANKING BOARD                               ║");
-    } else {
-        mvprintw(startY + 1, startX, "║                               STAGE %d RANKING BOARD                               ║", stageFilter);
     }
-    mvprintw(startY + 2, startX, "╠══════════════════════════════════════════════════════════════════════════════════════╣");
+    else
+    {
+        mvprintw(startY + 1, startX, "║                                STAGE %d RANKING BOARD                                 ║", stageFilter);
+    }
+    mvprintw(startY + 2, startX, "╠═══════════════════════════════════════════════════════════════════════════════════════╣");
     attroff(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_SPEED));
 
     // 테이블 헤더
@@ -435,83 +538,103 @@ void GameController::drawRankingTable(const std::vector<RankingRecord>& ranks, i
     attroff(A_BOLD);
 
     // 최대 11개 행 표출 (10등 내 순위 + 방금 플레이한 외각 순위 포함)
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < 11; i++)
+    {
         int rowY = startY + 5 + i;
-        if (i < (int)ranks.size()) {
-            const auto& r = ranks[i];
-            
-            if (r.isCurrentPlay) {
+        if (i < (int)ranks.size())
+        {
+            const auto &r = ranks[i];
+
+            if (r.isCurrentPlay)
+            {
                 attron(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-                if (r.rank <= 10) {
+                if (r.rank <= 10)
+                {
                     mvprintw(rowY, startX, "║->%2d위│  %d단계 │    %2d    │   %2d   │   %2d   │  %2d   │    %2d    │  %s  ║",
                              r.rank, r.stage, r.maxLength, r.growthCount, r.poisonCount, r.speedCount, r.gateCount, r.timestamp.c_str());
-                } else {
+                }
+                else
+                {
                     mvprintw(rowY, startX, "║내기록│  %d단계 │    %2d    │   %2d   │   %2d   │  %2d   │    %2d    │  %s  ║",
                              r.stage, r.maxLength, r.growthCount, r.poisonCount, r.speedCount, r.gateCount, r.timestamp.c_str());
                 }
                 attroff(COLOR_PAIR(COLOR_PAIR_TEXT_GROWTH) | A_BOLD);
-            } else {
+            }
+            else
+            {
                 // 상위 3등 특별 색상 강조
-                if (r.rank == 1) {
+                if (r.rank == 1)
+                {
                     attron(COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE) | A_BOLD); // 금빛
-                } else if (r.rank == 2) {
+                }
+                else if (r.rank == 2)
+                {
                     attron(COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | A_BOLD); // 은빛
-                } else if (r.rank == 3) {
+                }
+                else if (r.rank == 3)
+                {
                     attron(COLOR_PAIR(COLOR_PAIR_TEXT_GATE) | A_BOLD); // 동빛
                 }
-                
+
                 mvprintw(rowY, startX, "║  %2d위│  %d단계 │    %2d    │   %2d   │   %2d   │  %2d   │    %2d    │  %s  ║",
                          r.rank, r.stage, r.maxLength, r.growthCount, r.poisonCount, r.speedCount, r.gateCount, r.timestamp.c_str());
-                         
-                if (r.rank <= 3) {
+
+                if (r.rank <= 3)
+                {
                     attroff(A_BOLD | COLOR_PAIR(COLOR_PAIR_TEXT_USED_GATE) | COLOR_PAIR(COLOR_PAIR_TEXT_SPEED) | COLOR_PAIR(COLOR_PAIR_TEXT_GATE));
                 }
             }
-        } else {
+        }
+        else
+        {
             // 빈 공간 채워넣기
             mvprintw(rowY, startX, "║      │        │          │        │        │       │          │                       ║");
         }
     }
 
-    mvprintw(startY + 16, startX, "╚══════════════════════════════════════════════════════════════════════════════════════╝");
+    mvprintw(startY + 16, startX, "╚═══════════════════════════════════════════════════════════════════════════════════════╝");
 
     // 하단 정보 메시지
     attron(A_BOLD);
     int visualWidth = getUtf8VisualWidth(bottomMessage);
     int textX = startX + (boxWidth - visualWidth) / 2;
-    if (textX < startX) textX = startX;
+    if (textX < startX)
+        textX = startX;
     mvprintw(startY + 18, textX, "%s", bottomMessage.c_str());
     attroff(A_BOLD);
-    
+
     refresh();
 }
 
-bool GameController::showGameOverScreen(RankingManager& rankingManager) const {
+bool GameController::showGameOverScreen(RankingManager &rankingManager) const
+{
     rankingManager.addRecord(stageNum, scoreBoard.getMaxLength(), scoreBoard.getGrowthCount(), scoreBoard.getPoisonCount(), scoreBoard.getSpeedCount(), scoreBoard.getGateCount());
     rankingManager.markLatestAsCurrent();
     rankingManager.saveToFile();
 
-    bool playAgain = showRankingBoardScreen(rankingManager, stageNum, "GAME OVER! [ A ] 처음부터 재시작 | [ Q ] 종료 | [<- / ->] 다른 랭킹", true);
+    bool playAgain = showRankingBoardScreen(rankingManager, stageNum, "GAME OVER! [ A ] 처음부터 재시작 | [ Q ] 종료 | [← / →] 다른 랭킹", true);
     rankingManager.clearCurrentPlayFlag();
     return playAgain;
 }
 
-bool GameController::showStageClearScreen(RankingManager& rankingManager) const {
+bool GameController::showStageClearScreen(RankingManager &rankingManager) const
+{
     rankingManager.addRecord(stageNum, scoreBoard.getMaxLength(), scoreBoard.getGrowthCount(), scoreBoard.getPoisonCount(), scoreBoard.getSpeedCount(), scoreBoard.getGateCount());
     rankingManager.markLatestAsCurrent();
     rankingManager.saveToFile();
 
-    bool keepGoing = showRankingBoardScreen(rankingManager, stageNum, "STAGE CLEAR! [ A ] 다음 단계 계속 | [ Q ] 종료 | [<- / ->] 다른 랭킹", true);
+    bool keepGoing = showRankingBoardScreen(rankingManager, stageNum, "STAGE CLEAR! [ A ] 다음 단계 계속 | [ Q ] 종료 | [← / →] 다른 랭킹", true);
     rankingManager.clearCurrentPlayFlag();
     return keepGoing;
 }
 
-bool GameController::showTotalClearScreen(RankingManager& rankingManager, int maxLength, int growth, int poison, int speed, int gate) {
+bool GameController::showTotalClearScreen(RankingManager &rankingManager, int maxLength, int growth, int poison, int speed, int gate)
+{
     rankingManager.addRecord(5, maxLength, growth, poison, speed, gate);
     rankingManager.markLatestAsCurrent();
     rankingManager.saveToFile();
 
-    bool playAgain = showRankingBoardScreen(rankingManager, 0, "ALL STAGES CLEAR! [ A ] 처음부터 재시작 | [ Q ] 종료 | [<- / ->] 다른 랭킹", true);
+    bool playAgain = showRankingBoardScreen(rankingManager, 0, "ALL STAGES CLEAR! [ A ] 처음부터 재시작 | [ Q ] 종료 | [← / →] 다른 랭킹", true);
     rankingManager.clearCurrentPlayFlag();
     return playAgain;
 }
