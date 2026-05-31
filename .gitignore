@@ -18,3 +18,5 @@ snake
 *.dll
 
 *.pptx
+
+.scoreboard/
